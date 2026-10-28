@@ -338,9 +338,16 @@ textarea{resize:vertical;line-height:1.35}
       <div class="addr"><span id="buyeraddr">No FEVO link yet</span><button type="button" id="buyerreload" title="Reload" aria-label="Reload">↻</button></div>
       <div class="device" id="device"><div class="screen" id="screen">
         <div class="ph" id="buyerph"><b>Paste the FEVO link</b>The page buyers land on after scanning the QR code shows up here.</div>
+        <div class="ph" id="buyerblocked" hidden>
+          <b>See it exactly as a buyer does</b>
+          <canvas id="buyerqr" width="180" height="180" style="width:180px;height:180px;border-radius:8px" aria-label="QR code for the FEVO link"></canvas>
+          <span>Scan with your phone’s camera to open the FEVO page just like a fan would.</span>
+          <button class="btn primary" id="buyerpop2" type="button">Open it in a phone-sized window</button>
+          <span style="font-size:11.5px">FEVO doesn’t let its pages show inside other websites, so they open in their own window instead.</span>
+        </div>
       </div></div>
       <button class="btn primary" id="buyerpop" type="button" disabled>Open buyer view in its own window</button>
-      <p class="hint">This is the live FEVO page; anything you click is real, so stop before completing a purchase. Blank, or “refused to connect”? FEVO doesn’t allow its pages inside other sites. Use the button above; it opens a phone-sized window beside the builder.</p>
+      <p class="hint">This is the live FEVO page; anything you click is real, so stop before completing a purchase.</p>
     </section>
   </aside>
 </div>
@@ -368,7 +375,7 @@ textarea{resize:vertical;line-height:1.35}
   </ul>
   <h3>Buyer view</h3>
   <ul>
-    <li><b>Buyer view</b> (next to Reset) opens a phone-sized window to the right showing the FEVO link exactly as a fan sees it after scanning the QR code. Switch to Computer for the desktop page. If FEVO won’t load inside the page, <b>Open buyer view in its own window</b> opens it beside the builder. It’s the live page, so don’t complete a purchase.</li>
+    <li><b>Buyer view</b> (next to Reset) opens a phone-sized window to the right showing the FEVO link exactly as a fan sees it after scanning the QR code. Switch to Computer for the desktop page. FEVO links can’t load inside the page, so the panel shows a QR code to scan with your phone and a button that opens the page in a phone-sized window beside the builder. It’s the live page, so don’t complete a purchase.</li>
   </ul>
   <h3>Getting the flyer out</h3>
   <ul>
@@ -1018,6 +1025,7 @@ function qrPreview(){
 }
 /* ------------------------------ buyer view (the FEVO page as buyers see it) ------------------------------ */
 let buyerDev="phone", buyerUrl=null;
+const NO_FRAME=/(^|\.)fevo[\w-]*\.(com|io|net)$|(^|\.)fevo\./i;
 const DEV={phone:{w:390,h:844}, desk:{w:1280,h:860}};
 function buyerOpen(){ return !$("#buyer").hidden; }
 function setBuyer(on){
@@ -1037,7 +1045,12 @@ function updateBuyer(force){
   scr.style.width=(d.w*k)+"px"; scr.style.height=(d.h*k)+"px";
   $("#device").className="device"+(buyerDev==="desk"?" desk":"");
   let f=scr.querySelector("iframe");
-  if(!url){ if(f) f.remove(); $("#buyerph").hidden=false; buyerUrl=null; return; }
+  const blocked = !!url && NO_FRAME.test(new URL(url).hostname);   // sites that refuse to be shown inside other pages
+  $("#buyerblocked").hidden = !blocked;
+  $("#buyerpop").hidden = blocked;
+  if(!url||blocked){ if(f) f.remove(); $("#buyerph").hidden=!!url; buyerUrl=null;
+    if(blocked){ const m=qrMatrix(), c=$("#buyerqr"); if(m){ const x=c.getContext("2d"); x.clearRect(0,0,c.width,c.height); drawQR(x,{matrix:m,x:0,y:0,w:c.width,h:c.height},"#000"); } }
+    return; }
   $("#buyerph").hidden=true;
   if(!f){ f=document.createElement("iframe"); f.title="FEVO page preview"; f.referrerPolicy="no-referrer-when-downgrade"; f.setAttribute("allow","payment; clipboard-write"); scr.appendChild(f); }
   f.style.width=d.w+"px"; f.style.height=d.h+"px"; f.style.transform=`scale(${k})`;
@@ -1267,6 +1280,7 @@ function wire(){
   $("#buyerclose").addEventListener("click",()=>setBuyer(false));
   $$("#buyer [data-dev]").forEach(b=>b.addEventListener("click",()=>{ buyerDev=b.dataset.dev; $$("#buyer [data-dev]").forEach(x=>x.setAttribute("aria-pressed",x===b)); updateBuyer(false); }));
   $("#buyerreload").addEventListener("click",()=>updateBuyer(true));
+  $("#buyerpop2").addEventListener("click",()=>$("#buyerpop").click());
   $("#buyerpop").addEventListener("click",()=>{ const url=linkUrl(S.link); if(!url) return; const w=buyerDev==="phone"?420:1100, h=buyerDev==="phone"?880:820;
     const win=window.open(url,"wpbuyer",`popup=yes,width=${w},height=${h},left=${Math.max(0,(screen.availWidth||1400)-w-20)},top=40`);
     if(win) win.focus(); else toast("Your browser blocked the pop-up. Allow pop-ups for this site and try again.",5000); });
