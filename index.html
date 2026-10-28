@@ -344,6 +344,7 @@ textarea{resize:vertical;line-height:1.35}
           <span>Scan with your phone’s camera to open the FEVO page just like a fan would.</span>
           <button class="btn primary" id="buyerpop2" type="button">Open it in a phone-sized window</button>
           <span style="font-size:11.5px">FEVO doesn’t let its pages show inside other websites, so they open in their own window instead.</span>
+          <button class="linkbtn" id="buyertry" type="button" style="font-size:12px">Not a FEVO page? Try showing it here</button>
         </div>
       </div></div>
       <button class="btn primary" id="buyerpop" type="button" disabled>Open buyer view in its own window</button>
@@ -351,7 +352,7 @@ textarea{resize:vertical;line-height:1.35}
     </section>
   </aside>
 </div>
-<p class="pagefoot">New here? <button class="linkbtn" id="openguide" type="button">How the flyer builder works</button></p>
+<p class="pagefoot"><span id="appver"></span> · New here? <button class="linkbtn" id="openguide" type="button">How the flyer builder works</button></p>
 
 <div class="modal guide" id="guide" hidden role="dialog" aria-modal="true" aria-labelledby="g-title"><div class="box">
   <h2 id="g-title">How the flyer builder works</h2>
@@ -470,6 +471,7 @@ const CDN = {
   pdf:  ["https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js","https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"],
 };
 
+const APP_VERSION = "1.4 · Oct 27, 2026";   // shown at the bottom of the page so you can confirm GitHub is serving the newest file
 const W = 816, H = 1056;                 // 8.5 × 11 in at 96 px/in (same as the template slide)
 const NAVY = "#1F2358", RED = "#F2232A", WHITE = "#FFFFFF";
 const HEAD = "TaurunumW00-Tall", BODY = "Azo Sans";   // the template's typefaces
@@ -1025,7 +1027,7 @@ function qrPreview(){
 }
 /* ------------------------------ buyer view (the FEVO page as buyers see it) ------------------------------ */
 let buyerDev="phone", buyerUrl=null;
-const NO_FRAME=/(^|\.)fevo[\w-]*\.(com|io|net)$|(^|\.)fevo\./i;
+let buyerTry=null;   // the one link the rep asked to try loading inside the panel
 const DEV={phone:{w:390,h:844}, desk:{w:1280,h:860}};
 function buyerOpen(){ return !$("#buyer").hidden; }
 function setBuyer(on){
@@ -1045,9 +1047,14 @@ function updateBuyer(force){
   scr.style.width=(d.w*k)+"px"; scr.style.height=(d.h*k)+"px";
   $("#device").className="device"+(buyerDev==="desk"?" desk":"");
   let f=scr.querySelector("iframe");
-  const blocked = !!url && NO_FRAME.test(new URL(url).hostname);   // sites that refuse to be shown inside other pages
+  // Ticketing/checkout pages (FEVO and its short or branded links) refuse to load inside other sites, and a page
+  // can't detect that refusal, so the scan-or-pop-up view is the default. "Try showing it here" attempts the embed.
+  const blocked = !!url && buyerTry!==url;
   $("#buyerblocked").hidden = !blocked;
   $("#buyerpop").hidden = blocked;
+  if(!blocked && url && !$("#buyerback")){ const b=document.createElement("button"); b.id="buyerback"; b.type="button"; b.className="linkbtn"; b.style.fontSize="12px"; b.textContent="Page not loading? Show the QR code instead";
+    b.onclick=()=>{ buyerTry=null; updateBuyer(true); }; $("#buyerpop").after(b); }
+  if($("#buyerback")) $("#buyerback").hidden = blocked || !url;
   if(!url||blocked){ if(f) f.remove(); $("#buyerph").hidden=!!url; buyerUrl=null;
     if(blocked){ const m=qrMatrix(), c=$("#buyerqr"); if(m){ const x=c.getContext("2d"); x.clearRect(0,0,c.width,c.height); drawQR(x,{matrix:m,x:0,y:0,w:c.width,h:c.height},"#000"); } }
     return; }
@@ -1281,6 +1288,7 @@ function wire(){
   $$("#buyer [data-dev]").forEach(b=>b.addEventListener("click",()=>{ buyerDev=b.dataset.dev; $$("#buyer [data-dev]").forEach(x=>x.setAttribute("aria-pressed",x===b)); updateBuyer(false); }));
   $("#buyerreload").addEventListener("click",()=>updateBuyer(true));
   $("#buyerpop2").addEventListener("click",()=>$("#buyerpop").click());
+  $("#buyertry").addEventListener("click",()=>{ buyerTry=linkUrl(S.link); updateBuyer(true); });
   $("#buyerpop").addEventListener("click",()=>{ const url=linkUrl(S.link); if(!url) return; const w=buyerDev==="phone"?420:1100, h=buyerDev==="phone"?880:820;
     const win=window.open(url,"wpbuyer",`popup=yes,width=${w},height=${h},left=${Math.max(0,(screen.availWidth||1400)-w-20)},top=40`);
     if(win) win.focus(); else toast("Your browser blocked the pop-up. Allow pop-ups for this site and try again.",5000); });
@@ -1328,6 +1336,7 @@ function closeGuide(){ $("#guide").hidden=true; if($("#guidehide").checked) stor
 /* ------------------------------ start ------------------------------ */
 (async function boot(){
   try{ Object.keys(localStorage).filter(k=>k.startsWith(LS+"logo.")).forEach(k=>localStorage.removeItem(k)); }catch(e){}   // opponent logos can no longer be replaced per browser
+  $("#appver").textContent="Version "+APP_VERSION;
   buildFmt(); fillMenus(); wire(); syncUI(); renderRecent();
   try{ await Promise.all([`400 88px "${HEAD}"`,`700 20px "${BODY}"`,`400 20px "${BODY}"`].map(f=>document.fonts.load(f))); }catch(e){}
   [A.bg,A.wolf,A.box]=await Promise.all([loadImage(ASSETS.bg),loadImage(ASSETS.wolf),loadImage(ASSETS.box)]);
