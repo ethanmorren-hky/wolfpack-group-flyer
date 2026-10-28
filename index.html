@@ -45,7 +45,22 @@ textarea{resize:vertical;line-height:1.35}
 .btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
 .btn.small{padding:4px 8px;font-size:12px}
 .layout{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:18px;align-items:start}
-@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+.layout.withbuyer{grid-template-columns:minmax(330px,370px) minmax(0,1fr) minmax(340px,420px)}
+@media (max-width:1300px){.layout.withbuyer{grid-template-columns:minmax(300px,380px) minmax(0,1fr)} .layout.withbuyer .buyer{grid-column:2;position:static}}
+@media (max-width:900px){.layout,.layout.withbuyer{grid-template-columns:minmax(0,1fr)} .layout.withbuyer .buyer{grid-column:1}}
+.buyer{position:sticky;top:12px;min-width:0}
+.buyer .card{gap:8px}
+.addr{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:5px 6px 5px 12px;font-size:12px;color:var(--muted);min-width:0}
+.addr span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.addr button{border:0;background:none;cursor:pointer;color:var(--fg);font-size:14px;padding:2px 6px;border-radius:6px}
+.addr button:hover{background:var(--chip)}
+.device{margin:0 auto;background:#0d1320;border-radius:30px;padding:12px;box-shadow:0 10px 30px rgba(5,10,20,.25)}
+.device.desk{border-radius:10px;padding:8px}
+.screen{position:relative;overflow:hidden;background:#fff;border-radius:20px}
+.device.desk .screen{border-radius:4px}
+.screen iframe{position:absolute;left:0;top:0;border:0;transform-origin:0 0;background:#fff}
+.screen .ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;color:#5b6a7f;font-size:13px;line-height:1.45}
+.screen .ph b{color:#0f1b2d;font-size:14px}
 .rail{display:flex;flex-direction:column;gap:14px;min-width:0}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
 .card h2{font-family:var(--display);font-size:26px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:0;line-height:1.05}
@@ -59,10 +74,10 @@ textarea{resize:vertical;line-height:1.35}
 .tabs{display:flex;gap:4px}
 .tabs button{flex:1;border:1px solid var(--line);background:transparent;border-radius:6px;padding:6px 0;font-weight:700;cursor:pointer;font-size:13px}
 .tabs button[aria-pressed=true]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
-.fmt{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.fmt{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
 .fmt .tg svg{display:block;margin:auto}
 .fmt .grp{display:flex;gap:2px;margin-right:4px}
-.fmt .tg{min-width:30px;height:30px;border:1px solid var(--line);background:transparent;border-radius:6px;cursor:pointer;font-weight:700;padding:0 6px}
+.fmt .tg{min-width:28px;height:30px;border:1px solid var(--line);background:transparent;border-radius:6px;cursor:pointer;font-weight:700;padding:0 6px}
 .fmt .tg[aria-pressed=true]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
 .fmt .sw{width:24px;height:24px;border-radius:50%;border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line);cursor:pointer;padding:0}
 .fmt .sw[aria-pressed=true]{box-shadow:0 0 0 2px var(--sel)}
@@ -95,6 +110,7 @@ textarea{resize:vertical;line-height:1.35}
 .save{font-size:12px;color:var(--muted)}
 .save.ok{color:var(--ok)}
 .stage{min-width:0;position:sticky;top:12px}
+.layout.withbuyer .stage{position:sticky}
 @media (max-width:900px){.stage{position:static}}
 .stagebar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
 .stagebar .grow{flex:1}
@@ -270,6 +286,7 @@ textarea{resize:vertical;line-height:1.35}
     <div class="stagebar">
       <span class="lbl grow">Flyer preview, letter size · <span class="save" id="save">Saved in this browser</span></span>
       <label class="check" style="font-size:13px"><input type="checkbox" class="editmode"> Manual edit</label>
+      <button class="btn" id="buyertoggle" type="button" aria-pressed="false" title="Show what a buyer sees at the FEVO link">Buyer view</button>
       <button class="btn" id="newflyer" type="button" title="Start a fresh flyer from the template (keeps your rep)">Reset</button>
       <button class="btn" id="printbtn" type="button" title="Print the flyer on letter paper">Print</button>
       <div class="dl">
@@ -307,6 +324,25 @@ textarea{resize:vertical;line-height:1.35}
     </div>
     <p class="hint" id="filename" style="margin-top:8px"></p>
   </div>
+
+  <aside class="buyer" id="buyer" hidden aria-labelledby="h-buyer">
+    <section class="card">
+      <div class="row" style="justify-content:space-between">
+        <h2 id="h-buyer">Buyer view</h2>
+        <button class="btn small" id="buyerclose" type="button" aria-label="Hide buyer view">Hide</button>
+      </div>
+      <div class="tabs" role="group" aria-label="Screen size">
+        <button type="button" data-dev="phone" aria-pressed="true">Phone</button>
+        <button type="button" data-dev="desk" aria-pressed="false">Computer</button>
+      </div>
+      <div class="addr"><span id="buyeraddr">No FEVO link yet</span><button type="button" id="buyerreload" title="Reload" aria-label="Reload">↻</button></div>
+      <div class="device" id="device"><div class="screen" id="screen">
+        <div class="ph" id="buyerph"><b>Paste the FEVO link</b>The page buyers land on after scanning the QR code shows up here.</div>
+      </div></div>
+      <button class="btn primary" id="buyerpop" type="button" disabled>Open buyer view in its own window</button>
+      <p class="hint">This is the live FEVO page; anything you click is real, so stop before completing a purchase. Blank, or “refused to connect”? FEVO doesn’t allow its pages inside other sites. Use the button above; it opens a phone-sized window beside the builder.</p>
+    </section>
+  </aside>
 </div>
 <p class="pagefoot">New here? <button class="linkbtn" id="openguide" type="button">How the flyer builder works</button></p>
 
@@ -329,6 +365,10 @@ textarea{resize:vertical;line-height:1.35}
     <li><b>Add text</b> drops a new line on the flyer; its toolbar also has font, size and alignment.</li>
     <li>Add extra logos (a group’s own logo, a sponsor, or any AHL team) with <b>Add another logo</b> in the Logos card. They never replace the opponent.</li>
     <li>Unticking locks everything where you left it. Nothing resets unless you click <b>Put this item back</b> or <b>Reset all to template</b>.</li>
+  </ul>
+  <h3>Buyer view</h3>
+  <ul>
+    <li><b>Buyer view</b> (next to Reset) opens a phone-sized window to the right showing the FEVO link exactly as a fan sees it after scanning the QR code. Switch to Computer for the desktop page. If FEVO won’t load inside the page, <b>Open buyer view in its own window</b> opens it beside the builder. It’s the live page, so don’t complete a purchase.</li>
   </ul>
   <h3>Getting the flyer out</h3>
   <ul>
@@ -954,14 +994,14 @@ function render(){
   layout=buildLayout(A);
   const cv=$("#preview"), fit=$("#fit"), dpr=window.devicePixelRatio||1;
   const wide=window.innerWidth>900;
-  const maxH = wide ? window.innerHeight-90 : Infinity;
+  const maxH = wide ? window.innerHeight-(12+$(".stagebar").offsetHeight+10+16) : Infinity;   // fits the screen once the sticky preview reaches the top
   const cssW=Math.max(240, Math.min(fit.clientWidth, maxH*W/H, 816));
   cv.style.width=cssW+"px"; cv.style.height=(cssW*H/W)+"px";
   const pw=Math.round(cssW*dpr); if(cv.width!==pw){ cv.width=pw; cv.height=Math.round(pw*H/W); }
   renderTo(cv, editing ? layout.filter(i=>i.el!==editing.el) : layout, cv.width/W);
   drawEditOverlay(cv); positionEditor();
   $("#filename").textContent = "File name: "+fileBase();
-  dlHint(); qrPreview();
+  dlHint(); qrPreview(); if(buyerOpen()) buyerSoon();
   const ok=store.set("draft",S); const sv=$("#save"); sv.textContent= ok?"Saved in this browser":"Not saved (browser storage is off)"; sv.classList.toggle("ok",ok);
 }
 function dlHint(){
@@ -976,6 +1016,36 @@ function qrPreview(){
   if(m) drawQR(x,{matrix:m,x:0,y:0,w:c.width,h:c.height});
   $("#qrpng").disabled=$("#qrsvg").disabled=!m;
 }
+/* ------------------------------ buyer view (the FEVO page as buyers see it) ------------------------------ */
+let buyerDev="phone", buyerUrl=null;
+const DEV={phone:{w:390,h:844}, desk:{w:1280,h:860}};
+function buyerOpen(){ return !$("#buyer").hidden; }
+function setBuyer(on){
+  $("#buyer").hidden=!on; $(".layout").classList.toggle("withbuyer",!!on);
+  $("#buyertoggle").setAttribute("aria-pressed",!!on); $("#buyertoggle").classList.toggle("primary",!!on);
+  store.set("buyerOn",!!on); schedule(); if(on) updateBuyer(true);
+}
+function updateBuyer(force){
+  if(!buyerOpen()) return;
+  const url=linkUrl(S.link), scr=$("#screen"), d=DEV[buyerDev];
+  $("#buyeraddr").textContent = url || "No FEVO link yet"; $("#buyeraddr").title=url||"";
+  $("#buyerpop").disabled=!url; $("#buyerreload").disabled=!url;
+  // size the device to the panel
+  const avail=$("#device").parentElement.clientWidth-(buyerDev==="phone"?24:16);
+  const maxH=Math.max(320, window.innerHeight-(window.innerWidth>1300?260:200));
+  const k=Math.min(avail/d.w, maxH/d.h, 1);
+  scr.style.width=(d.w*k)+"px"; scr.style.height=(d.h*k)+"px";
+  $("#device").className="device"+(buyerDev==="desk"?" desk":"");
+  let f=scr.querySelector("iframe");
+  if(!url){ if(f) f.remove(); $("#buyerph").hidden=false; buyerUrl=null; return; }
+  $("#buyerph").hidden=true;
+  if(!f){ f=document.createElement("iframe"); f.title="FEVO page preview"; f.referrerPolicy="no-referrer-when-downgrade"; f.setAttribute("allow","payment; clipboard-write"); scr.appendChild(f); }
+  f.style.width=d.w+"px"; f.style.height=d.h+"px"; f.style.transform=`scale(${k})`;
+  if(force || buyerUrl!==url){ buyerUrl=url; f.src=url; }
+}
+let buyerT=null;
+function buyerSoon(){ clearTimeout(buyerT); buyerT=setTimeout(()=>updateBuyer(false),700); }   // wait until the rep stops typing the link
+
 function fileBase(){
   const d=parseDate(S.date), yy=n=>String(n%100).padStart(2,"0"), p2=n=>String(n).padStart(2,"0");
   let a="", dot="";
@@ -1192,6 +1262,14 @@ function wire(){
   $("#guideclose").addEventListener("click",closeGuide);
   $("#guide").addEventListener("click",e=>{ if(e.target.id==="guide") closeGuide(); });
   window.addEventListener("resize",schedule);
+  window.addEventListener("resize",()=>updateBuyer(false));
+  $("#buyertoggle").addEventListener("click",()=>setBuyer(!buyerOpen()));
+  $("#buyerclose").addEventListener("click",()=>setBuyer(false));
+  $$("#buyer [data-dev]").forEach(b=>b.addEventListener("click",()=>{ buyerDev=b.dataset.dev; $$("#buyer [data-dev]").forEach(x=>x.setAttribute("aria-pressed",x===b)); updateBuyer(false); }));
+  $("#buyerreload").addEventListener("click",()=>updateBuyer(true));
+  $("#buyerpop").addEventListener("click",()=>{ const url=linkUrl(S.link); if(!url) return; const w=buyerDev==="phone"?420:1100, h=buyerDev==="phone"?880:820;
+    const win=window.open(url,"wpbuyer",`popup=yes,width=${w},height=${h},left=${Math.max(0,(screen.availWidth||1400)-w-20)},top=40`);
+    if(win) win.focus(); else toast("Your browser blocked the pop-up. Allow pop-ups for this site and try again.",5000); });
   const cv=$("#preview"); cv.addEventListener("pointerdown",onDown); cv.addEventListener("pointermove",onMove); cv.addEventListener("pointerup",onUp); cv.addEventListener("pointercancel",onUp);
   $$(".editmode").forEach(c=>c.addEventListener("change",()=>setEdit(c.checked)));
   document.addEventListener("keydown",e=>{ if(!editMode||!sel||editing||e.target.closest("input,textarea,select,[contenteditable]")) return;
@@ -1240,6 +1318,7 @@ function closeGuide(){ $("#guide").hidden=true; if($("#guidehide").checked) stor
   try{ await Promise.all([`400 88px "${HEAD}"`,`700 20px "${BODY}"`,`400 20px "${BODY}"`].map(f=>document.fonts.load(f))); }catch(e){}
   [A.bg,A.wolf,A.box]=await Promise.all([loadImage(ASSETS.bg),loadImage(ASSETS.wolf),loadImage(ASSETS.box)]);
   loadExtraImgs(); editUI(); await resolveOpp(); render();
+  setBuyer(store.get("buyerOn", window.innerWidth>1300));
   if(!store.get("guideSeen",false)){ $("#guide").hidden=false; }
   window.__ready=true;
 })();
