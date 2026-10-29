@@ -243,6 +243,7 @@ details.step.done+details.step::before{background:var(--ok)}
     <details class="card step">
       <summary><h2>Theme night box</h2><span class="tip"><button type="button" class="q" aria-label="Help" aria-describedby="t-box">?</button><span class="tipbox" role="tooltip" id="t-box"><code>{GROUP}</code> drops in the group name. Press Enter for a new line. Text shrinks if it outgrows the box.</span></span></summary>
       <div class="body">
+        <p class="warn" id="boxgone" hidden>This box is removed from the flyer. To bring it back, select its spot in Manual edit and click <b>Put this item back</b>.</p>
         <div class="field"><label for="f-top">Top line</label><textarea id="f-top" data-k="box.top.text" rows="2"></textarea></div>
         <div class="fmt" data-fmtbar="top" role="group" aria-label="Top line formatting"></div>
         <div class="field"><label for="f-bot">Promo / theme night info</label><textarea id="f-bot" data-k="box.bot.text" rows="2"></textarea></div>
@@ -531,7 +532,7 @@ const CDN = {
   pdf:  ["https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js","https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"],
 };
 
-const APP_VERSION = "1.6 · Oct 28, 2026";   // shown at the bottom of the page so you can confirm GitHub is serving the newest file
+const APP_VERSION = "1.7 · Oct 28, 2026";   // shown at the bottom of the page so you can confirm GitHub is serving the newest file
 const W = 816, H = 1056;                 // 8.5 × 11 in at 96 px/in (same as the template slide)
 const NAVY = "#1F2358", RED = "#F2232A", WHITE = "#FFFFFF";
 const HEAD = "TaurunumW00-Tall", BODY = "Azo Sans";   // the template's typefaces
@@ -716,6 +717,7 @@ function buildLayout(A){
   if(ph) er.push({text:ph, fam:"body", size:29.33, bold:true, color:WHITE});
   if(er.length) T("email", 409.9, 800, 1027.99, er);
   applyAdj(L);
+  for(const it of L) if(it.el && REMOVABLE.includes(it.el) && (S.adj[it.el]||{}).hidden) it.ghost=true;   // removed in manual edit: still selectable, not drawn
   for(const t of S.texts||[]){ const base={fam:t.font,size:t.size,color:t.color||NAVY}, lh=t.size*1.2;
     textLines(t).forEach((line,i)=>L.push({t:"text", el:"t:"+t.id, block:"t:"+t.id, cx:t.cx, w:780, align:t.align, base:t.base+i*lh, lh, runs:fitRuns(fromStored(line,base),780)})); }
   for(const e of S.extras||[]){ const im=extraImgs[e.img]; if(im) L.push({t:"img", el:"x:"+e.id, img:im, x:e.x, y:e.y, w:e.w, h:e.h, name:e.name||"Logo"}); }
@@ -776,6 +778,7 @@ function layoutBox(L, groupName, {BX,BY,BW,BH}){
 
 /* ------------------------------ manual edit: move / resize / added logos ------------------------------ */
 const EL_NAMES={toplogo:"Wolf Pack logo (top)",group:"Group name",date:"Date & time",wolf:"Wolf Pack logo",vs:"“vs”",opp:"Opponent logo",price:"Ticket price",instr:"Order line",link:"FEVO link",qr:"QR code",box:"Theme night box",deadline:"Deadline",bar:"Red fine-print bar",contact:"Contact lines",email:"Email & phone"};
+const REMOVABLE=["toplogo","box"];   // template items that "Remove this" can take off the flyer
 const STRETCHY=el=>el==="wolf"||el==="toplogo"||el==="opp"||String(el).startsWith("x:");   // logos can be reshaped; text keeps its proportions
 const extraImgs={};
 let rawBoxes={}, editMode=false, sel=null, drag=null, snapX=null;
@@ -816,10 +819,10 @@ function editUI(){
   const n=adjCount(), info=$("#selinfo");
   $("#editctl").hidden=!editMode;
   const label=sel ? (sel.startsWith("x:") ? ((S.extras.find(e=>"x:"+e.id===sel)||{}).name||"Added logo") : sel.startsWith("t:") ? "Added text" : EL_NAMES[sel]) : null;
-  const gone = sel==="toplogo" && !!(S.adj.toplogo||{}).hidden, ex=sel&&sel.startsWith("x:")?S.extras.find(e=>"x:"+e.id===sel):null;
+  const gone = REMOVABLE.includes(sel) && !!(S.adj[sel]||{}).hidden, ex=sel&&sel.startsWith("x:")?S.extras.find(e=>"x:"+e.id===sel):null;
   info.textContent = sel ? `Selected: ${label}${gone?" (removed)":""}` : "Click anything on the flyer to select it.";
   $("#selreset").hidden = !sel || /^[xt]:/.test(sel) || !(S.adj[sel]||S.ov[sel]!=null);
-  $("#selremove").hidden = !sel || !(/^[xt]:/.test(sel) || (sel==="toplogo"&&!gone));
+  $("#selremove").hidden = !sel || !(/^[xt]:/.test(sel) || (REMOVABLE.includes(sel)&&!gone));
   $("#selbg").hidden = !ex || ex.img.startsWith("ahl:");   // uploaded logos only; the AHL logos have no background
   if(ex) $("#selbg").textContent = ex.orig ? "Put background back" : "Remove background";
   const ai=$("#adjinfo"); ai.hidden = n===0;
@@ -1112,6 +1115,7 @@ function render(){
   renderTo(cv, editing ? layout.filter(i=>i.el!==editing.el) : layout, cv.width/W);
   drawEditOverlay(cv); positionEditor();
   $("#filename").textContent = "File name: "+fileBase();
+  $("#boxgone").hidden = !(S.adj.box||{}).hidden;
   dlHint(); qrPreview(); glance(); if(buyerOpen()) buyerSoon();
   const ok=store.set("draft",S); const sv=$("#save"); sv.textContent= ok?"Saved in this browser":"Not saved (browser storage is off)"; sv.classList.toggle("ok",ok);
 }
@@ -1205,7 +1209,7 @@ async function makePptx(){
   const P=await lib("pptx","PptxGenJS"), p=new P();
   p.defineLayout({name:"LETTER",width:8.5,height:11}); p.layout="LETTER"; p.title=fileBase(); p.author="Hartford Wolf Pack";
   const s=p.addSlide(), IN=v=>v/96, PT=v=>Math.round(v*0.75*100)/100, hex=c=>c.replace("#","").toUpperCase();
-  const groups=[]; for(const it of layout){ const g=groups.at(-1); if(it.t==="text"&&g&&g.t==="tg"&&g.block===it.block) g.lines.push(it); else groups.push(it.t==="text"?{t:"tg",block:it.block,lines:[it]}:it); }
+  const groups=[]; for(const it of layout.filter(i=>!i.ghost)){ const g=groups.at(-1); if(it.t==="text"&&g&&g.t==="tg"&&g.block===it.block) g.lines.push(it); else groups.push(it.t==="text"?{t:"tg",block:it.block,lines:[it]}:it); }
   for(const it of groups){
     if(it.ghost) continue;
     if(it.t==="img"&&it.shadow){ const pad=8,k=4,c=document.createElement("canvas"); c.width=Math.round((it.w+pad*2)*k); c.height=Math.round((it.h+pad*2)*k); renderTo(c,[{...it,x:pad,y:pad}],k); s.addImage({data:c.toDataURL("image/png"),x:IN(it.x-pad),y:IN(it.y-pad),w:IN(it.w+pad*2),h:IN(it.h+pad*2),altText:it.name||""}); }
@@ -1427,7 +1431,7 @@ function wire(){
   document.addEventListener("pointerdown",e=>{ if(editing&&!e.target.closest("#inlined,#tbar,#preview")) closeEditor(true); });
   $("#selreset").addEventListener("click",()=>{ if(sel){ delete S.adj[sel]; delete S.ov[sel]; editUI(); schedule(); } });
   $("#selremove").addEventListener("click",()=>{ if(!sel) return;
-    if(sel==="toplogo"){ S.adj.toplogo={...(S.adj.toplogo||{}),hidden:true}; editUI(); schedule(); return; }   // stays selected so "Put this item back" is right there
+    if(REMOVABLE.includes(sel)){ S.adj[sel]={...(S.adj[sel]||{}),hidden:true}; editUI(); schedule(); return; }   // stays selected so "Put this item back" is right there
     const id=sel.slice(2); if(sel.startsWith("x:")) S.extras=S.extras.filter(x=>x.id!==id); else S.texts=S.texts.filter(t=>t.id!==id); sel=null; editUI(); schedule(); });
   $("#selbg").addEventListener("click",async()=>{ const e=S.extras.find(x=>"x:"+x.id===sel); if(!e) return;
     if(e.orig){ e.img=e.orig; delete e.orig; loadExtraImgs(); }
