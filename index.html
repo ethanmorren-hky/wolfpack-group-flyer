@@ -44,8 +44,10 @@ button,input,select,textarea{font:inherit;color:inherit}
 .field label.btn{font-size:12px;letter-spacing:0;text-transform:none;color:var(--fg)}
 select,input[type=text],input[type=url],input[type=email],input[type=tel],input[type=date],input[type=number],input[type=search],textarea{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-width:0;width:100%}
 textarea{resize:vertical;line-height:1.35}
-.btn{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:8px 12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:8px 12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:border-color .12s,background .12s}
 .btn:hover{border-color:var(--accent)}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.5;cursor:default;transform:none}
 .btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
 .btn.small{padding:4px 8px;font-size:12px}
 .layout{display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:18px;align-items:start}
@@ -80,7 +82,7 @@ textarea{resize:vertical;line-height:1.35}
 .screen .ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;color:#5b6a7f;font-size:13px;line-height:1.45}
 .screen .ph b{color:#0f1b2d;font-size:14px}
 .rail{display:flex;flex-direction:column;gap:14px;min-width:0}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
 .card h2{font-family:var(--display);font-size:26px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:0;line-height:1.05}
 .hint{font-size:12.5px;color:var(--muted);margin:0;line-height:1.45}
 .hint code{background:var(--chip);border-radius:4px;padding:0 4px;font-size:12px}
@@ -107,9 +109,18 @@ textarea{resize:vertical;line-height:1.35}
 .logo-row{display:flex;align-items:center;gap:10px}
 .logo-row .pv{width:52px;height:52px;border-radius:8px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;flex:none}
 .logo-row .pv img{max-width:46px;max-height:46px}
+.tiles{display:flex;flex-wrap:wrap;gap:8px}
+.tile{width:52px;height:52px;border-radius:8px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer;padding:0}
+.tile img{max-width:44px;max-height:44px}
+.tile[aria-pressed=true]{box-shadow:0 0 0 2px var(--accent)}
+.tile.add{background:transparent;border-style:dashed;color:var(--muted);font-size:22px;line-height:1}
+.tile.add:hover,.tile:hover{border-color:var(--accent);color:var(--fg)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 /* Collapsible cards in the left rail: the header always shows, the rest opens on click or "Next" */
 details.card{display:block;padding:0}
-details.card>summary{display:flex;align-items:center;gap:8px;padding:12px 14px;cursor:pointer;list-style:none;border-radius:10px}
+details.card>summary{display:flex;align-items:center;gap:10px;padding:13px 14px;cursor:pointer;list-style:none;border-radius:8px}
+details.card>summary:hover{background:var(--chip)}
+details.card[open]>summary:hover{background:transparent}
 details.card>summary::-webkit-details-marker{display:none}
 details.card>summary::after{content:"";flex:none;width:7px;height:7px;margin:0 3px 3px 0;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .15s}
 details.card[open]>summary::after{transform:rotate(-135deg);margin:3px 3px 0 0}
@@ -162,7 +173,7 @@ details.step.done+details.step::before{background:var(--ok)}
 #tbar .sep{width:1px;height:22px;background:var(--line);margin:0 2px}
 #tbar select,#tbar input{width:auto;padding:4px 6px}
 #tbar input{width:56px}
-#preview{display:block;box-shadow:0 6px 24px rgba(10,20,40,.18);background:#fff}
+#preview{display:block;margin:0 auto;box-shadow:0 6px 24px rgba(10,20,40,.18);background:#fff}
 .dl{position:relative}
 .menu{position:absolute;right:0;top:calc(100% + 6px);background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 14px 34px rgba(5,10,20,.25);min-width:220px;padding:6px;z-index:20;display:none}
 .menu.open{display:block}
@@ -184,7 +195,7 @@ details.step.done+details.step::before{background:var(--ok)}
 .linkbtn{border:0;background:none;color:var(--accent);font-weight:700;text-decoration:underline;cursor:pointer;padding:4px}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--accent-fg);padding:10px 16px;border-radius:8px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;max-width:calc(100% - 32px)}
 .toast.show{opacity:1}
-@media (max-width:600px){ body{padding:12px} .brand h1{font-size:32px} .brand img.l{height:48px} .brand img.x{display:none} }
+@media (max-width:600px){ body{padding:16px} .brand h1{font-size:32px} .brand img.l{height:48px} .brand img.x{display:none} }
 #printimg{display:none}
 @media print{
   @page{size:8.5in 11in;margin:0}
@@ -290,9 +301,10 @@ details.step.done+details.step::before{background:var(--ok)}
     </details>
 
     <details class="card" id="editcard">
-      <summary><h2>Manual edit</h2><span class="tip"><button type="button" class="q" aria-label="Help" aria-describedby="t-edit">?</button><span class="tipbox" role="tooltip" id="t-edit">Leave this off and everything stays exactly on the template. Turn it on to drag items on the preview: the corner handle resizes, a logo’s side handles reshape it, and arrow keys nudge (hold Shift for bigger steps). Double-click any text to type right on the flyer; a toolbar pops up at the top. Turning it off locks your changes in place; it never undoes them. To add a logo, use <b>Add another logo</b> in the Logos card.</span></span></summary>
+      <summary><h2>Manual edit</h2><span class="tip"><button type="button" class="q" aria-label="Help" aria-describedby="t-edit">?</button><span class="tipbox" role="tooltip" id="t-edit">Leave this off and everything stays exactly on the template. Turn it on to drag items on the preview: the corner handle resizes, a logo’s side handles reshape it, and arrow keys nudge (hold Shift for bigger steps). Double-click any text to type right on the flyer; a toolbar pops up at the top. Delete removes the selected item; ⌘/Ctrl X, C and V cut, copy and paste it; ⌘/Ctrl Z undoes. Turning it off locks your changes in place; it never undoes them. To add a logo, use <b>Add another logo</b> in the Logos card.</span></span></summary>
       <div class="body">
-        <label class="check"><input type="checkbox" class="editmode" id="editmode"> Unlock the flyer to move and edit items</label>
+        <div class="row"><label class="check" style="flex:1"><input type="checkbox" class="editmode" id="editmode"> Unlock the flyer to move and edit items</label>
+          <button class="btn small" id="undo" type="button" disabled title="Undo the last change (⌘Z / Ctrl+Z)"><svg width="13" height="13" viewBox="0 0 16 16" aria-hidden="true" style="vertical-align:-2px;margin-right:4px"><path d="M5 3 1.5 6.5 5 10M2 6.5h7.5a4.5 4.5 0 0 1 0 9H7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Undo</button></div>
         <div id="editctl" hidden style="display:flex;flex-direction:column;gap:8px">
           <p class="hint" id="selinfo"></p>
           <div class="row">
@@ -307,15 +319,16 @@ details.step.done+details.step::before{background:var(--ok)}
     </details>
 
     <details class="card">
-      <summary><h2>Logos</h2><span class="tip"><button type="button" class="q" aria-label="Help" aria-describedby="t-logo">?</button><span class="tipbox" role="tooltip" id="t-logo">The opponent logo changes with the game. An added logo (a youth organization, a sponsor) goes on top of the flyer and never replaces the opponent: it appears in the middle, ready to drag into place, and Manual edit turns on for you. If an uploaded logo sits on a white or solid box, select it and click <b>Remove background</b>.</span></span></summary>
+      <summary><h2>Logos</h2><span class="tip"><button type="button" class="q" aria-label="Help" aria-describedby="t-logo">?</button><span class="tipbox" role="tooltip" id="t-logo">The opponent logo changes with the game. An added logo (a youth organization, a sponsor) goes on top of the flyer and never replaces the opponent: it appears in the middle, ready to drag into place, and Manual edit turns on for you. If an uploaded logo sits on a white or solid box, select it and click <b>Remove background</b>. Every logo you add stays as a tile under <b>Added logos</b>; click a tile to put it on the flyer again.</span></span></summary>
       <div class="body">
         <div class="logo-row">
           <div class="pv" id="opppv"></div>
           <p class="hint" id="oppmsg" style="flex:1"></p>
         </div>
+        <div class="field"><span class="lbl">Added logos</span><div class="tiles" id="xtiles"></div></div>
         <div class="field"><label for="xahl">Add another logo</label>
           <div class="row" style="flex-wrap:nowrap">
-            <label class="btn small">Upload a logo<input type="file" id="xfile" accept="image/*" hidden></label>
+            <label class="btn small">Upload a logo<input type="file" class="xfile" accept="image/*" hidden></label>
             <select id="xahl" aria-label="Add an AHL team logo"><option value="">or an AHL team…</option></select>
           </div>
         </div>
@@ -532,7 +545,7 @@ const CDN = {
   pdf:  ["https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js","https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"],
 };
 
-const APP_VERSION = "1.7 · Oct 28, 2026";   // shown at the bottom of the page so you can confirm GitHub is serving the newest file
+const APP_VERSION = "1.8 · Oct 29, 2026";   // shown at the bottom of the page so you can confirm GitHub is serving the newest file
 const W = 816, H = 1056;                 // 8.5 × 11 in at 96 px/in (same as the template slide)
 const NAVY = "#1F2358", RED = "#F2232A", WHITE = "#FFFFFF";
 const HEAD = "TaurunumW00-Tall", BODY = "Azo Sans";   // the template's typefaces
@@ -591,6 +604,7 @@ function defaults(){
     rep:{ key:"cfg:0", name:r.name, email:r.email, phone:r.phone },
     adj:{},      // manual-edit moves/resizes, per flyer element: {dx,dy,sx,sy}
     extras:[],   // logos added in manual edit: {id,img,name,x,y,w,h}
+    logos:[],    // every logo added to this flyer, kept as tiles in the Logos card so it can be added again: {img,name}
     ov:{},       // manual-edit text changes to template items: {element: text}
     texts:[],    // text added in manual edit: {id,text,font,size,bold,italic,underline,color,align,cx,base}
     done:[],     // left-rail steps finished with Next / Done (shown green)
@@ -778,10 +792,29 @@ function layoutBox(L, groupName, {BX,BY,BW,BH}){
 
 /* ------------------------------ manual edit: move / resize / added logos ------------------------------ */
 const EL_NAMES={toplogo:"Wolf Pack logo (top)",group:"Group name",date:"Date & time",wolf:"Wolf Pack logo",vs:"“vs”",opp:"Opponent logo",price:"Ticket price",instr:"Order line",link:"FEVO link",qr:"QR code",box:"Theme night box",deadline:"Deadline",bar:"Red fine-print bar",contact:"Contact lines",email:"Email & phone"};
-const REMOVABLE=["toplogo","box"];   // template items that "Remove this" can take off the flyer
+const REMOVABLE=Object.keys(EL_NAMES);   // any template item can be taken off the flyer ("Remove this" / Delete), and put back
 const STRETCHY=el=>el==="wolf"||el==="toplogo"||el==="opp"||String(el).startsWith("x:");   // logos can be reshaped; text keeps its proportions
 const extraImgs={};
-let rawBoxes={}, editMode=false, sel=null, drag=null, snapX=null;
+let rawBoxes={}, editMode=false, sel=null, drag=null, guides=null;
+// Undo for manual edit: snapshots of the edit layers (moves, removals, added logos and text), newest last
+const hist=[], snap=()=>JSON.stringify({adj:S.adj,extras:S.extras,ov:S.ov,texts:S.texts,logos:S.logos});
+function remember(s=snap()){ hist.push(s); if(hist.length>60) hist.shift(); $("#undo").disabled=false; }
+function undo(){
+  const s=hist.pop(); if(!s) return; closeEditor(false); Object.assign(S,JSON.parse(s));
+  if(sel&&((sel.startsWith("x:")&&!S.extras.some(e=>"x:"+e.id===sel))||(sel.startsWith("t:")&&!S.texts.some(t=>"t:"+t.id===sel)))) sel=null;
+  $("#undo").disabled=!hist.length; loadExtraImgs(); editUI(); schedule(); toast("Undone.");
+}
+const UNDO_KEY=/Mac|iP/.test(navigator.platform)?"⌘Z":"Ctrl+Z";
+// Alignment guides: while dragging, edges and centres snap to other items, to the page centre, and to the mirror
+// image of other items across the centre (so two logos on either side sit at the same distance from the middle)
+function guideLines(skip){
+  const B=curBoxes(), xs=[{v:W/2,c:true}], ys=[];
+  for(const k in B){ if(k===skip||(S.adj[k]||{}).hidden) continue; const b=B[k];
+    for(const v of [b.x,b.x+b.w/2,b.x+b.w]){ xs.push({v}, {v:W-v,m:true}); }
+    ys.push({v:b.y},{v:b.y+b.h/2},{v:b.y+b.h}); }
+  return {xs,ys};
+}
+function snapTo(lines, edges, thr){ let best=null; for(const l of lines) for(const e of edges){ const d=l.v-e; if(Math.abs(d)<thr&&(!best||Math.abs(d)<Math.abs(best.d))) best={d,l}; } return best; }
 function itemBox(it){
   if(it.t==="text"){ const tw=lineWidth(it.runs), x=lineStartX(it,tw), m=Math.max(1,...it.runs.filter(r=>!r.sup&&!r.sub).map(r=>r.size)), cap=it.runs.some(r=>r.fam==="head")?0.8:0.74; return [x,it.base-m*cap,x+tw,it.base+m*0.16]; }
   if(it.t==="line") return [it.x1,it.y-it.w/2,it.x2,it.y+it.w/2];
@@ -798,9 +831,12 @@ function applyAdj(L){
     else { it.x=X(it.x); it.y=Y(it.y); it.w*=sx; it.h*=sy; if(it.r) it.r*=Math.min(sx,sy); }
   }
 }
+// where an added logo's picture lives: built in (an AHL team, the template's Wolf Pack logo) or uploaded to this browser
+const logoSrc=k=>k==="tpl:wolf" ? ASSETS.wolf : k.startsWith("ahl:") ? ASSETS.logos[k.slice(4)] : store.get("img."+k,null);
+const builtIn=k=>/^(ahl|tpl):/.test(k);
 function loadExtraImgs(){
-  for(const e of S.extras||[]){ if(extraImgs[e.img]) continue;
-    const src = e.img.startsWith("ahl:") ? ASSETS.logos[e.img.slice(4)] : store.get("img."+e.img,null);
+  for(const e of [...(S.extras||[]), ...(S.logos||[]), ...(S.extras||[]).filter(x=>x.orig).map(x=>({img:x.orig}))]){ if(extraImgs[e.img]) continue;   // flyer logos, then the tiles
+    const src = logoSrc(e.img);
     if(src) loadImage(src).then(i=>{ extraImgs[e.img]=i; schedule(); }).catch(()=>{}); }
 }
 const adjCount=()=>Object.keys(S.adj||{}).length+(S.extras||[]).length+Object.keys(S.ov||{}).length+(S.texts||[]).length;
@@ -815,15 +851,24 @@ function setEdit(on){
   $("#preview").style.cursor = editMode ? "default" : "";
   editUI(); schedule();
 }
+const selLabel=k=>k.startsWith("x:") ? ((S.extras.find(e=>"x:"+e.id===k)||{}).name||"Added logo") : k.startsWith("t:") ? "Added text" : EL_NAMES[k];
+// The Logos card's tiles: every logo added to this flyer (also ones since removed from it); a click puts it on the flyer again
+const logoLib=()=>{ const out=[]; for(const l of [...(S.logos||[]), ...S.extras.map(e=>({img:e.orig||e.img,name:e.name}))]) if(!out.some(o=>o.img===l.img)) out.push(l); return out; };
+function logoTiles(){
+  const lib=logoLib(), on=l=>S.extras.some(e=>(e.orig||e.img)===l.img);
+  const el=$("#xtiles"), sig=lib.map(l=>l.img+(extraImgs[l.img]?1:0)+(on(l)?1:0)).join(); if(el.dataset.sig===sig) return; el.dataset.sig=sig;
+  el.innerHTML = lib.map(l=>{ const im=extraImgs[l.img]; return `<button type="button" class="pv tile" data-xadd="${esc(l.img)}" aria-pressed="${on(l)}" title="Add ${esc(l.name||"this logo")} to the flyer" aria-label="Add ${esc(l.name||"this logo")} to the flyer">${im?`<img alt="" src="${im.src}">`:""}</button>`; }).join("")
+    + `<label class="pv tile add" title="Upload another logo"><span aria-hidden="true">+</span><span class="sr">Upload another logo</span><input type="file" class="xfile" accept="image/*" hidden></label>`;
+}
 function editUI(){
   const n=adjCount(), info=$("#selinfo");
   $("#editctl").hidden=!editMode;
-  const label=sel ? (sel.startsWith("x:") ? ((S.extras.find(e=>"x:"+e.id===sel)||{}).name||"Added logo") : sel.startsWith("t:") ? "Added text" : EL_NAMES[sel]) : null;
+  const label=sel ? selLabel(sel) : null;
   const gone = REMOVABLE.includes(sel) && !!(S.adj[sel]||{}).hidden, ex=sel&&sel.startsWith("x:")?S.extras.find(e=>"x:"+e.id===sel):null;
   info.textContent = sel ? `Selected: ${label}${gone?" (removed)":""}` : "Click anything on the flyer to select it.";
   $("#selreset").hidden = !sel || /^[xt]:/.test(sel) || !(S.adj[sel]||S.ov[sel]!=null);
   $("#selremove").hidden = !sel || !(/^[xt]:/.test(sel) || (REMOVABLE.includes(sel)&&!gone));
-  $("#selbg").hidden = !ex || ex.img.startsWith("ahl:");   // uploaded logos only; the AHL logos have no background
+  $("#selbg").hidden = !ex || builtIn(ex.img);   // uploaded logos only; the built-in logos have no background
   if(ex) $("#selbg").textContent = ex.orig ? "Put background back" : "Remove background";
   const ai=$("#adjinfo"); ai.hidden = n===0;
   $("#adjtext").textContent = `${n} manual change${n===1?"":"s"} on this flyer${editMode?"":" (locked in place)"}.`;
@@ -844,12 +889,13 @@ let downInfo=null;
 function onDown(e){
   if(!editMode) return;
   if(editing) closeEditor(true);
+  if(document.activeElement && document.activeElement!==document.body) document.activeElement.blur();   // keys now go to the flyer (Delete, arrows, undo)
   const p=pagePt(e), h=hitTest(p);
   downInfo={el:h&&h.el, wasSel:!!h&&h.el===sel&&h.mode==="move", p};
   if(!h){ sel=null; editUI(); schedule(); return; }
   sel=h.el; const B=curBoxes();
   const ex=sel.startsWith("x:")?S.extras.find(x=>"x:"+x.id===sel):null, tx=curText();
-  drag={mode:h.mode,p0:p,b0:B[sel],a0:ex?{...ex}:tx?{...tx}:{dx:0,dy:0,sx:1,sy:1,...(S.adj[sel]||{})},ex,tx};
+  drag={mode:h.mode,p0:p,b0:B[sel],a0:ex?{...ex}:tx?{...tx}:{dx:0,dy:0,sx:1,sy:1,...(S.adj[sel]||{})},ex,tx,before:snap(),lines:guideLines(sel)};
   if(drag.a0.sy==null) drag.a0.sy=drag.a0.sx;
   $("#preview").setPointerCapture(e.pointerId); e.preventDefault(); editUI(); schedule();
 }
@@ -857,9 +903,13 @@ function onMove(e){
   if(!editMode) return;
   const p=pagePt(e);
   if(!drag){ const h=hitTest(p); $("#preview").style.cursor = !h?"default":h.mode==="move"?"move":h.mode==="c"?"nwse-resize":h.mode==="w"?"ew-resize":"ns-resize"; return; }
-  let dx=p.x-drag.p0.x, dy=p.y-drag.p0.y; const {b0,a0,ex,tx}=drag; snapX=null;
+  let dx=p.x-drag.p0.x, dy=p.y-drag.p0.y; const {b0,a0,ex,tx}=drag; guides=null;
+  if(!drag.saved){ remember(drag.before); drag.saved=true; }
   if(drag.mode==="move"){
-    const c=b0.x+b0.w/2+dx; if(Math.abs(c-W/2)<5){ dx+=W/2-c; snapX=W/2; }
+    const thr=6*p.k, gx=snapTo(drag.lines.xs,[b0.x+dx,b0.x+b0.w/2+dx,b0.x+b0.w+dx],thr), gy=snapTo(drag.lines.ys,[b0.y+dy,b0.y+b0.h/2+dy,b0.y+b0.h+dy],thr);
+    guides={x:[],y:[]};
+    if(gx){ dx+=gx.d; guides.x.push(gx.l.v); if(gx.l.m) guides.x.push(W-gx.l.v, W/2); }   // mirrored: show both sides and the centre
+    if(gy){ dy+=gy.d; guides.y.push(gy.l.v); }
     if(ex){ ex.x=a0.x+dx; ex.y=a0.y+dy; } else if(tx){ tx.cx=a0.cx+dx; tx.base=a0.base+dy; } else S.adj[sel]={...a0,dx:a0.dx+dx,dy:a0.dy+dy};
   } else {
     let rx=Math.max(0.15,(b0.w+dx)/b0.w), ry=Math.max(0.15,(b0.h+dy)/b0.h);
@@ -874,10 +924,37 @@ function onMove(e){
 }
 function onUp(e){
   const moved = drag && downInfo && e && Math.hypot(pagePt(e).x-downInfo.p.x, pagePt(e).y-downInfo.p.y) > 2;
-  if(drag){ drag=null; snapX=null; editUI(); schedule(); }
+  if(drag){ if(drag.saved&&snap()===drag.before){ hist.pop(); $("#undo").disabled=!hist.length; }   // a click, not a change
+    drag=null; guides=null; editUI(); schedule(); }
   if(downInfo&&downInfo.wasSel&&!moved&&isText(downInfo.el)) openEditor(downInfo.el);
   downInfo=null; }
-function nudge(dx,dy){ if(!sel) return; const ex=sel.startsWith("x:")?S.extras.find(x=>"x:"+x.id===sel):null, tx=curText();
+// Cut / copy / paste (⌘/Ctrl X, C, V). Added logos and text copy as they are; a template logo or line of text
+// pastes as an added copy (the template item itself stays one of a kind). Pastes step down-right from the original.
+let clip=null;
+function copySel(){
+  if(!sel) return false; const B=curBoxes(), b=B[sel];
+  const ex=sel.startsWith("x:")?S.extras.find(e=>"x:"+e.id===sel):null, tx=curText();
+  if(ex) clip={kind:"logo", img:ex.img, name:ex.name, x:ex.x, y:ex.y, w:ex.w, h:ex.h};
+  else if(tx) clip={kind:"text", t:JSON.parse(JSON.stringify(tx))};
+  else if(b&&(sel==="wolf"||sel==="toplogo"||(sel==="opp"&&ASSETS.logos[slug(S.opp)]))) clip={kind:"logo", img:sel==="opp"?"ahl:"+slug(S.opp):"tpl:wolf", name:selLabel(sel), x:b.x, y:b.y, w:b.w, h:b.h};
+  else { const items=layout.filter(i=>i.el===sel&&i.t==="text"&&!i.ghost); if(!items.length||sel==="box"){ toast("That part of the flyer can’t be copied."); return false; }
+    const base=baseOf(items[0].runs), first=items[0];
+    clip={kind:"text", t:{lines:items.map(it=>toStored(it.runs,base)), font:base.fam, size:base.size, color:base.color, align:"center", cx:b.x+b.w/2, base:first.base}}; }
+  clip.n=0; return true;
+}
+async function pasteClip(){
+  if(!clip) return; const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6), d=20*++clip.n;
+  if(clip.kind==="logo"){
+    if(!extraImgs[clip.img]){ const src=logoSrc(clip.img); if(src) extraImgs[clip.img]=await loadImage(src); }
+    remember(); S.extras.push({id, img:clip.img, name:clip.name, x:clip.x+d, y:clip.y+d, w:clip.w, h:clip.h});
+    if(!S.logos.some(l=>l.img===clip.img)) S.logos.push({img:clip.img, name:clip.name});
+    sel="x:"+id;
+  } else { remember(); S.texts.push({...JSON.parse(JSON.stringify(clip.t)), id, cx:clip.t.cx+d, base:clip.t.base+d}); sel="t:"+id; }
+  editUI(); schedule(); toast("Pasted. Drag it into place.");
+}
+let lastNudge=0;
+function nudge(dx,dy){ if(!sel) return; if(Date.now()-lastNudge>800) remember(); lastNudge=Date.now();   // a run of arrow presses undoes as one step
+  const ex=sel.startsWith("x:")?S.extras.find(x=>"x:"+x.id===sel):null, tx=curText();
   if(ex){ ex.x+=dx; ex.y+=dy; } else if(tx){ tx.cx+=dx; tx.base+=dy; } else { const a={dx:0,dy:0,sx:1,...(S.adj[sel]||{})}; a.dx+=dx; a.dy+=dy; S.adj[sel]=a; } editUI(); schedule(); }
 function drawEditOverlay(cv){
   if(!editMode) return;
@@ -886,7 +963,9 @@ function drawEditOverlay(cv){
   for(const k in B){ if(editing&&k===editing.el) continue; const b=B[k]; c.strokeStyle= k===sel?"#2f6fed":"rgba(47,111,237,.55)"; c.lineWidth=(k===sel?2:1)*px; c.setLineDash(k===sel?[]:[4*px,3*px]); c.strokeRect(b.x,b.y,b.w,b.h); }
   c.setLineDash([]);
   if(sel&&B[sel]&&!editing) for(const [,x,y] of handlesFor(sel,B[sel])){ const r=5*px; c.fillStyle="#fff"; c.strokeStyle="#2f6fed"; c.lineWidth=1.5*px; c.fillRect(x-r,y-r,2*r,2*r); c.strokeRect(x-r,y-r,2*r,2*r); }
-  if(snapX!=null){ c.strokeStyle="#e0218a"; c.lineWidth=1*px; c.beginPath(); c.moveTo(snapX,0); c.lineTo(snapX,H); c.stroke(); }
+  if(guides){ c.strokeStyle="#e0218a"; c.lineWidth=1*px;
+    for(const x of guides.x){ c.setLineDash(x===W/2&&guides.x.length>1?[5*px,4*px]:[]); c.beginPath(); c.moveTo(x,0); c.lineTo(x,H); c.stroke(); }
+    c.setLineDash([]); for(const y of guides.y){ c.beginPath(); c.moveTo(0,y); c.lineTo(W,y); c.stroke(); } }
 }
 /* ---- inline text editor: type on the flyer, toolbar at the top ---- */
 let editing=null;
@@ -943,17 +1022,22 @@ function parseEditor(d, base){
 }
 function closeEditor(commit){
   const d=$("#inlined"); if(!d){ editing=null; $("#tbar").hidden=true; return; }
+  const before=snap();
   if(commit&&editing){ const lines=parseEditor(d,editing.base);
     if(editing.tx){ const empty=lines.every(l=>!l.some(r=>r.text.trim())); if(empty) S.texts=S.texts.filter(t=>t!==editing.tx); else { editing.tx.lines=lines; delete editing.tx.text; } }
     else if(JSON.stringify(lines)===editing.orig) delete S.ov[editing.el]; else S.ov[editing.el]={lines}; }
+  if(snap()!==before) remember(before);
   d.remove(); editing=null; $("#tbar").hidden=true; editUI(); schedule();
 }
 function tbState(){ if(!editing) return; for(const b of $$("#tbar [data-cmd]")){ let on=false; try{ on=document.queryCommandState(b.dataset.cmd); }catch(e){} b.setAttribute("aria-pressed",on); }
   if(editing.tx) $$("#tbar [data-talign]").forEach(b=>b.setAttribute("aria-pressed",editing.tx.align===b.dataset.talign)); }
 
 async function addExtra(img, name, key){
-  const w0=140, k=w0/Math.max(img.width,img.height), w=img.width*k, h=img.height*k, id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-  extraImgs[key]=img; S.extras.push({id, img:key, name, x:W/2-w/2, y:560-h/2, w, h});
+  // lands in the open space beside the QR code (left first, then right), the two spots mirror each other across the centre
+  const k=Math.min(130/img.width,95/img.height), w=img.width*k, h=img.height*k, id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  const left=S.extras.filter(e=>e.x+e.w/2<W/2).length, right=S.extras.length-left, cx=W/2+(left<=right?-203:203);
+  remember(); extraImgs[key]=img; S.extras.push({id, img:key, name, x:cx-w/2, y:586-h/2, w, h});
+  if(!S.logos.some(l=>l.img===key)) S.logos.push({img:key, name});
   sel="x:"+id; if(!editMode) setEdit(true); editUI(); schedule();
 }
 
@@ -1116,6 +1200,7 @@ function render(){
   drawEditOverlay(cv); positionEditor();
   $("#filename").textContent = "File name: "+fileBase();
   $("#boxgone").hidden = !(S.adj.box||{}).hidden;
+  logoTiles();
   dlHint(); qrPreview(); glance(); if(buyerOpen()) buyerSoon();
   const ok=store.set("draft",S); const sv=$("#save"); sv.textContent= ok?"Saved in this browser":"Not saved (browser storage is off)"; sv.classList.toggle("ok",ok);
 }
@@ -1193,13 +1278,13 @@ async function makePdf(dpi){
   const P=await lib("pdf","PDFLib"), jpg=await toBlob(exportCanvas(dpi),"image/jpeg",0.95);
   const doc=await P.PDFDocument.create(); doc.setTitle(fileBase()); doc.setAuthor("Hartford Wolf Pack"); doc.setCreator("Wolf Pack Group Flyer");
   const img=await doc.embedJpg(await jpg.arrayBuffer()), page=doc.addPage([612,792]); page.drawImage(img,{x:0,y:0,width:612,height:792});
-  for(const it of layout.filter(i=>i.t==="text"&&i.runs.some(r=>r.link))){ // clickable FEVO link and email
+  for(const it of layout.filter(i=>i.t==="text"&&!i.ghost&&i.runs.some(r=>r.link))){ // clickable FEVO link and email
     let x=lineStartX(it,lineWidth(it.runs));
     for(const r of it.runs){ const w=runWidth(r); if(r.link){ const k=.75;
       const a=doc.context.obj({Type:"Annot",Subtype:"Link",Rect:[x*k,(H-it.base-r.size*.25)*k,(x+w)*k,(H-it.base+r.size*.85)*k],Border:[0,0,0],A:{Type:"Action",S:"URI",URI:P.PDFString.of(r.link)}});
       page.node.addAnnot(doc.context.register(a)); } x+=w; }
   }
-  const qr=layout.find(i=>i.t==="qr"), u=linkUrl(S.link);
+  const qr=layout.find(i=>i.t==="qr"&&!i.ghost), u=linkUrl(S.link);
   if(qr&&u){ const k=.75; const a=doc.context.obj({Type:"Annot",Subtype:"Link",Rect:[qr.x*k,(H-qr.y-qr.h)*k,(qr.x+qr.w)*k,(H-qr.y)*k],Border:[0,0,0],A:{Type:"Action",S:"URI",URI:P.PDFString.of(u)}}); page.node.addAnnot(doc.context.register(a)); }
   return new Blob([await doc.save()],{type:"application/pdf"});
 }
@@ -1340,7 +1425,8 @@ function syncUI(){
 }
 const markSteps=()=>$$(".rail details.step").forEach((d,i)=>d.classList.toggle("done",S.done.includes(i)));
 function applyGame(i){ const g=SCHEDULE[i]; S.game=i; S.date=g[0]; S.time=g[1]; S.opp=g[2]; if(!S.dl.manual) S.dl.date=defaultDeadline(S.date); }
-function loadState(s){ closeEditor(false); S=merge(defaults(), JSON.parse(JSON.stringify(s))); sel=null; syncUI(); loadExtraImgs(); editUI(); renderRecent(); resolveOpp().then(schedule); schedule(); }
+// a different flyer: nothing to undo
+function loadState(s){ closeEditor(false); S=merge(defaults(), JSON.parse(JSON.stringify(s))); sel=null; hist.length=0; $("#undo").disabled=true; syncUI(); loadExtraImgs(); editUI(); renderRecent(); resolveOpp().then(schedule); schedule(); }
 function onField(el){
   const k=el.dataset.k; let v=el.type==="checkbox"?el.checked:el.value;
   if(el.type==="number"){ v=+v; if(!v) return; v=Math.max(8,Math.min(30,v)); }
@@ -1389,7 +1475,7 @@ function wire(){
   $("#dlbtn").addEventListener("click",e=>{ e.stopPropagation(); const o=$("#dlmenu").classList.toggle("open"); $("#dlbtn").setAttribute("aria-expanded",o); if(o) $("#dlmenu .mi").focus(); });
   $("#printbtn").addEventListener("click",doPrint);
   $$("#dlmenu [data-fmt]").forEach(b=>b.addEventListener("click",()=>doExport(b.dataset.fmt)));
-  $("#savejson").addEventListener("click",()=>{ const images={}; for(const e of S.extras) for(const k of [e.img,e.orig]) if(k&&!k.startsWith("ahl:")){ const d=store.get("img."+k,null)||(extraImgs[k]&&imgData(extraImgs[k])); if(d) images[k]=d; }
+  $("#savejson").addEventListener("click",()=>{ const images={}; for(const k of [...S.extras.flatMap(e=>[e.img,e.orig]), ...S.logos.map(l=>l.img)]) if(k&&!builtIn(k)){ const d=store.get("img."+k,null)||(extraImgs[k]&&imgData(extraImgs[k])); if(d) images[k]=d; }
     save(new Blob([JSON.stringify({...S,images},null,2)],{type:"application/json"}),fileBase()+".json"); });
   $("#openjson").addEventListener("change",async e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return; try{ const j=JSON.parse(await f.text()); for(const [k,v] of Object.entries(j.images||{})) store.set("img."+k,v); loadState(j); toast("Setup opened."); }catch(err){ toast("That file isn’t a flyer setup."); } });
   $("#newflyer").addEventListener("click",()=>{ const b=$("#newflyer"); if(!b.dataset.armed){ b.dataset.armed=1; b.textContent="Click again to reset"; b.classList.add("primary"); setTimeout(()=>{ delete b.dataset.armed; b.textContent="Reset"; b.classList.remove("primary"); },3000); return; }
@@ -1409,14 +1495,22 @@ function wire(){
     if(win) win.focus(); else toast("Your browser blocked the pop-up. Allow pop-ups for this site and try again.",5000); });
   const cv=$("#preview"); cv.addEventListener("pointerdown",onDown); cv.addEventListener("pointermove",onMove); cv.addEventListener("pointerup",onUp); cv.addEventListener("pointercancel",onUp);
   $$(".editmode").forEach(c=>c.addEventListener("change",()=>setEdit(c.checked)));
-  document.addEventListener("keydown",e=>{ if(!editMode||!sel||editing||e.target.closest("input,textarea,select,[contenteditable]")) return;
+  // only a field you type in keeps the keys; a focused checkbox or button (the Manual edit box, say) must not swallow Delete
+  const typing=t=>!!t.closest("textarea,select,[contenteditable]") || (t.matches("input") && !/^(checkbox|radio|button|submit|reset|file|range|color)$/.test(t.type));
+  document.addEventListener("keydown",e=>{ if(!editMode||editing||typing(e.target)) return;
+    if((e.metaKey||e.ctrlKey)&&!e.shiftKey&&e.key.toLowerCase()==="z"){ e.preventDefault(); undo(); return; }
+    if((e.metaKey||e.ctrlKey)&&!e.shiftKey){ const k=e.key.toLowerCase();
+      if(k==="v"&&clip){ e.preventDefault(); pasteClip(); return; }
+      if(k==="c"&&sel){ e.preventDefault(); if(copySel()) toast(`Copied ${selLabel(sel)}. Paste with ${UNDO_KEY.replace("Z","V")}.`); return; }
+      if(k==="x"&&sel){ e.preventDefault(); const what=selLabel(sel); if(copySel()){ $("#selremove").click(); toast(`Cut ${what}. Paste with ${UNDO_KEY.replace("Z","V")}.`); } return; } }
+    if(!sel) return;
     const st=e.shiftKey?10:1, m={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,-st],ArrowDown:[0,st]}[e.key];
     if(m){ e.preventDefault(); nudge(...m); }
     else if((e.key==="Delete"||e.key==="Backspace")&&!$("#selremove").hidden){ e.preventDefault(); $("#selremove").click(); } });
   cv.addEventListener("dblclick",e=>{ if(!editMode) return; const h=hitTest(pagePt(e)); if(h&&isText(h.el)) openEditor(h.el); });
   $("#addtext").addEventListener("click",()=>{ const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
     if(!editMode) setEdit(true);
-    S.texts.push({id,lines:[[{text:"NEW TEXT",bold:true}]],font:"body",size:32,color:NAVY,align:"center",cx:W/2,base:600});
+    remember(); S.texts.push({id,lines:[[{text:"NEW TEXT",bold:true}]],font:"body",size:32,color:NAVY,align:"center",cx:W/2,base:600});
     sel="t:"+id; editUI(); render(); openEditor(sel); });
   const tb=$("#tbar");
   tb.addEventListener("mousedown",e=>{ if(!e.target.closest("select,input")) e.preventDefault(); });   // keep the text selection
@@ -1426,21 +1520,22 @@ function wire(){
   $("#tbfont").addEventListener("change",e=>{ const t=editing&&editing.tx; if(!t) return; t.font=e.target.value; editing.base.fam=t.font; render(); $("#inlined")?.focus(); });
   $("#tbsize").addEventListener("input",e=>{ const t=editing&&editing.tx, v=+e.target.value; if(!t||!(v>=6&&v<=120)) return; t.size=v/0.75; editing.base.size=t.size; render(); });
   $("#tbdone").addEventListener("click",()=>closeEditor(true));
-  $("#tbundo").addEventListener("click",()=>{ if(!editing) return; const el=editing.el; delete S.ov[el]; $("#inlined")?.remove(); editing=null; $("#tbar").hidden=true; editUI(); render(); toast("Back to the original wording."); });
+  $("#tbundo").addEventListener("click",()=>{ if(!editing) return; const el=editing.el; remember(); delete S.ov[el]; $("#inlined")?.remove(); editing=null; $("#tbar").hidden=true; editUI(); render(); toast("Back to the original wording."); });
   document.addEventListener("selectionchange",tbState);
   document.addEventListener("pointerdown",e=>{ if(editing&&!e.target.closest("#inlined,#tbar,#preview")) closeEditor(true); });
-  $("#selreset").addEventListener("click",()=>{ if(sel){ delete S.adj[sel]; delete S.ov[sel]; editUI(); schedule(); } });
-  $("#selremove").addEventListener("click",()=>{ if(!sel) return;
+  $("#selreset").addEventListener("click",()=>{ if(sel){ remember(); delete S.adj[sel]; delete S.ov[sel]; editUI(); schedule(); } });
+  $("#selremove").addEventListener("click",()=>{ if(!sel) return; remember(); toast(`${selLabel(sel)} removed. Undo (${UNDO_KEY}) brings it back.`,3500);
     if(REMOVABLE.includes(sel)){ S.adj[sel]={...(S.adj[sel]||{}),hidden:true}; editUI(); schedule(); return; }   // stays selected so "Put this item back" is right there
     const id=sel.slice(2); if(sel.startsWith("x:")) S.extras=S.extras.filter(x=>x.id!==id); else S.texts=S.texts.filter(t=>t.id!==id); sel=null; editUI(); schedule(); });
-  $("#selbg").addEventListener("click",async()=>{ const e=S.extras.find(x=>"x:"+x.id===sel); if(!e) return;
+  $("#undo").addEventListener("click",undo);
+  $("#selbg").addEventListener("click",async()=>{ const e=S.extras.find(x=>"x:"+x.id===sel); if(!e) return; remember();
     if(e.orig){ e.img=e.orig; delete e.orig; loadExtraImgs(); }
     else { const im=extraImgs[e.img]; if(!im) return; const d=cutBackground(im), key="u"+Date.now().toString(36);
       if(!store.set("img."+key,d)) toast("Done, but this browser can’t remember the image after you leave.");
       extraImgs[key]=await loadImage(d); e.orig=e.img; e.img=key; }
     editUI(); schedule(); });
   $("#resetall").addEventListener("click",()=>{ const b=$("#resetall"); if(!b.dataset.armed){ b.dataset.armed=1; b.textContent="Click again to reset"; setTimeout(()=>{ delete b.dataset.armed; b.textContent="Reset all to template"; },3000); return; }
-    delete b.dataset.armed; b.textContent="Reset all to template"; S.adj={}; S.extras=[]; S.ov={}; S.texts=[]; sel=null; editUI(); schedule(); toast("Back to the template layout and text."); });
+    delete b.dataset.armed; b.textContent="Reset all to template"; remember(); S.adj={}; S.extras=[]; S.logos=[]; S.ov={}; S.texts=[]; sel=null; editUI(); schedule(); toast(`Back to the template layout and text. Undo (${UNDO_KEY}) if that was a mistake.`,3500); });
   $("#xahl").innerHTML=`<option value="">or an AHL team…</option>`+Object.keys(ASSETS.logos).map(k=>`<option value="${k}">${esc(k.split("-").map(w=>w[0].toUpperCase()+w.slice(1)).join(" ").replace("Icehogs","IceHogs").replace("Wilkes Barre Scranton","Wilkes-Barre/Scranton"))}</option>`).join("");
   $("#xahl").addEventListener("change",async e=>{ const k=e.target.value, name=e.target.options[e.target.selectedIndex]?.text||k; e.target.value=""; if(!k) return; addExtra(await loadImage(ASSETS.logos[k]), name, "ahl:"+k); });
   $("#recent").addEventListener("click",e=>{
@@ -1448,7 +1543,11 @@ function wire(){
     if(a){ askDel=a.dataset.ask; renderRecent(); $("#recent [data-keep]")?.focus(); }
     else if(k){ askDel=null; renderRecent(); }
     else if(d){ const l=store.get("recent",[]); l.forEach((r,i)=>{ if(!r.id) r.id="r"+i+"_"+r.at; }); const gone=l.find(r=>r.id===d.dataset.del); store.set("recent",l.filter(r=>r.id!==d.dataset.del)); askDel=null; renderRecent(); if(gone) toast("Deleted "+gone.name); } });
-  $("#xfile").addEventListener("change",async e=>{ const f=e.target.files[0]; e.target.value=""; if(!f) return;
+  $("#xtiles").addEventListener("click",async e=>{ const t=e.target.closest("[data-xadd]"); if(!t) return; const key=t.dataset.xadd, l=logoLib().find(x=>x.img===key);
+    const src=extraImgs[key]?null:logoSrc(key);
+    const im=extraImgs[key]||(src&&await loadImage(src).catch(()=>null)); if(!im){ toast("That logo isn’t saved in this browser any more. Upload it again."); return; }
+    addExtra(im, l&&l.name, key); toast(`${(l&&l.name)||"Logo"} added to the flyer.`); });
+  document.addEventListener("change",async e=>{ if(!e.target.matches(".xfile")) return; const f=e.target.files[0]; e.target.value=""; if(!f) return;
     const d=await shrinkImage(f,900), key="u"+Date.now().toString(36);
     if(!store.set("img."+key,d)) toast("Added, but this browser can’t remember the image after you leave.");
     addExtra(await loadImage(d), f.name.replace(/\.[^.]+$/,""), key); });
