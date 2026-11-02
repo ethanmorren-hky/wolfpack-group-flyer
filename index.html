@@ -416,18 +416,19 @@ details.step.done+details.step::before{background:var(--ok)}
     <div id="fit"><canvas id="preview" width="816" height="1056" aria-label="Flyer preview"></canvas>
       <div id="tbar" hidden role="toolbar" aria-label="Text formatting">
         <button class="tg" type="button" data-cmd="bold" title="Bold" aria-label="Bold"><b>B</b></button>
-        <button class="tg" type="button" data-cmd="italic" title="Italic" aria-label="Italic"><i>I</i></button>
+        <button class="tg nobox" type="button" data-cmd="italic" title="Italic" aria-label="Italic"><i>I</i></button>
         <button class="tg" type="button" data-cmd="underline" title="Underline" aria-label="Underline"><u>U</u></button>
-        <button class="tg" type="button" data-cmd="superscript" title="Superscript" aria-label="Superscript">x<sup>2</sup></button>
-        <button class="tg" type="button" data-cmd="subscript" title="Subscript" aria-label="Subscript">x<sub>2</sub></button>
+        <button class="tg nobox" type="button" data-cmd="superscript" title="Superscript" aria-label="Superscript">x<sup>2</sup></button>
+        <button class="tg nobox" type="button" data-cmd="subscript" title="Subscript" aria-label="Subscript">x<sub>2</sub></button>
+        <button class="tg" type="button" id="tbcase" title="Change case: UPPER, lower, Title (selected words, or all of it)" aria-label="Change case">Aa</button>
         <span class="sep"></span>
         <button class="sw" type="button" data-color="#1F2358" style="background:#1F2358" title="Navy" aria-label="Navy"></button>
         <button class="sw" type="button" data-color="#F2232A" style="background:#F2232A" title="Red" aria-label="Red"></button>
-        <button class="sw" type="button" data-color="#FFFFFF" style="background:#fff" title="White" aria-label="White"></button>
-        <button class="sw" type="button" data-color="#000000" style="background:#000" title="Black" aria-label="Black"></button>
-        <span class="sep tx-only"></span>
+        <button class="sw nobox" type="button" data-color="#FFFFFF" style="background:#fff" title="White" aria-label="White"></button>
+        <button class="sw nobox" type="button" data-color="#000000" style="background:#000" title="Black" aria-label="Black"></button>
+        <span class="sep"></span>
         <select class="tx-only" id="tbfont" aria-label="Font"><option value="head">Taurunum</option><option value="body">Azo Sans</option></select>
-        <input class="tx-only" id="tbsize" type="number" min="6" max="120" step="1" aria-label="Size in points" title="Size (pt)">
+        <input id="tbsize" type="number" min="6" max="120" step="1" aria-label="Size in points" title="Size (pt)">
         <button class="tg tx-only" type="button" data-talign="left" title="Align left" aria-label="Align left">L</button>
         <button class="tg tx-only" type="button" data-talign="center" title="Center" aria-label="Center">C</button>
         <button class="tg tx-only" type="button" data-talign="right" title="Align right" aria-label="Align right">R</button>
@@ -491,7 +492,7 @@ details.step.done+details.step::before{background:var(--ok)}
   <h3>Manual edit (only when needed)</h3>
   <ul>
     <li>Tick <b>Manual edit</b> to unlock the flyer. Drag items to move them, drag the corner handle to resize, and drag a logo’s side handles to reshape it. Arrow keys nudge.</li>
-    <li>Double-click any text on the flyer to type over it. A toolbar appears at the top of the flyer for bold, italic, underline, superscript, subscript and color. Click <b>Done</b> (or anywhere else) when finished.</li>
+    <li>Double-click any text on the flyer to type over it. A toolbar appears at the top of the flyer for bold, italic, underline, superscript, subscript, <b>Aa</b> (switch the selected words between UPPER, lower and Title case), color and text size. Click <b>Done</b> (or anywhere else) when finished.</li>
     <li><b>Add text</b> drops a new line on the flyer; its toolbar also has font, size and alignment.</li>
     <li>Add extra logos (a group’s own logo, another organization’s, or any AHL team) with <b>Add another logo</b> in the Logos card. They never replace the opponent.</li>
     <li>Unticking locks everything where you left it. Nothing resets unless you click <b>Put this item back</b> or <b>Reset all to template</b>.</li>
@@ -608,7 +609,7 @@ const CDN = {
   pdf:  ["https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js","https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"],
 };
 
-const APP_VERSION = "1.9 · Nov 1, 2026";   // shown at the bottom of the page so you can confirm GitHub is serving the newest file
+const APP_VERSION = "1.10 · Nov 2, 2026";   // shown at the bottom of the page so you can confirm GitHub is serving the newest file
 const W = 816, H = 1056;                 // 8.5 × 11 in at 96 px/in (same as the template slide)
 const NAVY = "#1F2358", RED = "#F2232A", WHITE = "#FFFFFF";
 const HEAD = "TaurunumW00-Tall", BODY = "Azo Sans";   // the template's typefaces
@@ -818,7 +819,7 @@ function bgClean(){ // the template background with the top logo's spot filled i
 function linkUrl(s){ s=(s||"").trim(); if(!s) return null; if(/^https?:\/\//i.test(s)) return s; if(/^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(s)) return "https://"+s; return null; }
 
 function layoutBox(L, groupName, {BX,BY,BW,BH}){
-  const prep=(b,i)=>{ const txt=String(b.text||"").replace(/\{GROUP\}/gi, groupName).toUpperCase();
+  const prep=(b,i)=>{ const raw=boxGroupIn(b.text), txt=b.asTyped?raw:raw.toUpperCase();
     return txt.trim() ? { i, cx: i===0?417.2:401.9, b, runs:parseMarkup(txt,{size:b.size/0.75, bold:b.bold, italic:b.italic, underline:b.underline, color:b.color}) } : null; };
   const blocks=[prep(S.box.top,0), prep(S.box.bot,1)].filter(Boolean);
   if(!blocks.length) return;
@@ -867,7 +868,7 @@ function remember(s=snap()){ hist.push(s); if(hist.length>60) hist.shift(); $("#
 function undo(){
   const s=hist.pop(); if(!s) return; closeEditor(false); Object.assign(S,JSON.parse(s));
   if(sel&&((sel.startsWith("x:")&&!S.extras.some(e=>"x:"+e.id===sel))||(sel.startsWith("t:")&&!S.texts.some(t=>"t:"+t.id===sel)))) sel=null;
-  $("#undo").disabled=!hist.length; loadExtraImgs(); editUI(); schedule(); toast("Undone.");
+  $("#undo").disabled=!hist.length; loadExtraImgs(); syncUI(); editUI(); schedule(); toast("Undone.");
 }
 const UNDO_KEY=/Mac|iP/.test(navigator.platform)?"⌘Z":"Ctrl+Z";
 // Alignment guides: while dragging, edges and centres snap to other items, to the page centre, and to the mirror
@@ -1035,17 +1036,19 @@ function drawEditOverlay(cv){
 /* ---- inline text editor: type on the flyer, toolbar at the top ---- */
 let editing=null;
 const toHex=c=>{ const m=String(c).match(/\d+(\.\d+)?/g); return m?"#"+m.slice(0,3).map(v=>(+v|0).toString(16).padStart(2,"0")).join("").toUpperCase():NAVY; };
-function editorItems(el){ return layout.filter(i=>i.el===el&&i.t==="text"); }
+function editorItems(el){ const k=/^box\d$/.test(el)?"block":"el"; return layout.filter(i=>i[k]===el&&i.t==="text"); }   // box0/box1: one block of the theme night box
 function openEditor(el){
   if(!editMode||!el) return;
-  if(el==="box"){ toast("The theme night box text is set in its card on the left."); return; }
   const items=editorItems(el); if(!items.length) return;
   closeEditor(true);
-  const tx=el.startsWith("t:")?S.texts.find(t=>"t:"+t.id===el):null;
+  const tx=el.startsWith("t:")?S.texts.find(t=>"t:"+t.id===el):null, bm=/^box(\d)$/.exec(el), bb=bm&&S.box[+bm[1]?"bot":"top"];
   let base, lines;
   if(tx){ base={fam:tx.font,size:tx.size,color:tx.color||NAVY}; lines=textLines(tx); }
+  else if(bb){ base={fam:"body",size:baseOf(items[0].runs).size,color:bb.color||NAVY};
+    const raw=boxGroupIn(bb.text);
+    lines=(bb.asTyped?raw:raw.toUpperCase()).split("\n").map(l=>toStored(parseMarkup(l,{size:base.size,bold:bb.bold,italic:bb.italic,underline:bb.underline,color:base.color}),base)); }
   else { const src=items[0].src; base=baseOf(src[0]); lines=S.ov[el]!=null?ovLines(S.ov[el],base):src.map(r=>toStored(r,base)); }
-  editing={el,tx,base,orig:JSON.stringify(tx?null:src0(items,base))};
+  editing={el,tx,box:bb,base,orig:JSON.stringify(tx||bb?null:src0(items,base))};
   const d=document.createElement("div"); d.id="inlined"; d.contentEditable="true"; d.spellcheck=true; d.setAttribute("role","textbox"); d.setAttribute("aria-label","Edit text");
   d.innerHTML=lines.map(l=>l.map(r=>{ let h=`<span style="font-weight:${r.bold?700:400};font-style:${r.italic?"italic":"normal"};text-decoration:${r.underline?"underline":"none"};color:${r.color||base.color}${r.rel?`;font-size:${r.rel}em`:""}"${r.rel?` data-rel="${r.rel}"`:""}>${esc(r.text)}</span>`;
     return r.sup?`<sup>${h}</sup>`:r.sub?`<sub>${h}</sub>`:h; }).join("")).join("<br>");
@@ -1053,24 +1056,51 @@ function openEditor(el){
   d.addEventListener("paste",e=>{ e.preventDefault(); document.execCommand("insertText",false,(e.clipboardData||window.clipboardData).getData("text/plain")); });
   d.addEventListener("input",()=>positionEditor());
   $("#fit").appendChild(d);
-  $("#tbar").hidden=false; $$("#tbar .tx-only").forEach(x=>x.hidden=!tx); $("#tbundo").hidden=!!tx || S.ov[el]==null;
-  if(tx){ $("#tbfont").value=tx.font; $("#tbsize").value=Math.round(tx.size*0.75); }
+  $("#tbar").hidden=false; $$("#tbar .tx-only").forEach(x=>x.hidden=!tx); $$("#tbar .nobox").forEach(x=>x.hidden=!!bb); $("#tbundo").hidden=!!tx || !!bb || S.ov[el]==null;
+  if(tx) $("#tbfont").value=tx.font;
+  $("#tbsize").value=bb?Math.round(bb.size):Math.round((tx?tx.size:baseOf(items[0].runs).size)*0.75);
   try{ document.execCommand("styleWithCSS",false,true); }catch(e){}
   positionEditor(); schedule();
   d.focus(); const rg=document.createRange(); rg.selectNodeContents(d); const sl=getSelection(); sl.removeAllRanges(); sl.addRange(rg);
   tbState();
 }
+// UPPER -> lower -> Title on the selected words (all the text if nothing is selected), keeping each word's formatting
+function changeCase(){
+  const d=$("#inlined"); if(!d) return;
+  const sl=getSelection(); let rg=sl.rangeCount?sl.getRangeAt(0):null;
+  if(!rg||rg.collapsed||!d.contains(rg.commonAncestorContainer)){ rg=document.createRange(); rg.selectNodeContents(d); }
+  const nodes=[], tw=document.createTreeWalker(d,NodeFilter.SHOW_TEXT|NodeFilter.SHOW_ELEMENT);   // a <br> counts as a line break so Title case starts each line
+  while(tw.nextNode()){ const n=tw.currentNode; if(n.nodeType===3?rg.intersectsNode(n):n.nodeName==="BR") nodes.push(n); }
+  const {startContainer:sc,startOffset:so,endContainer:ec,endOffset:eo}=rg;
+  const part=n=>n.nodeType===3?[n===sc?so:0, n===ec?eo:n.nodeValue.length]:[0,1];
+  const txt=nodes.map(n=>n.nodeType===3?n.nodeValue.slice(...part(n)):"\n").join("");
+  const conv = txt===txt.toUpperCase() ? txt.toLowerCase() : txt===txt.toLowerCase() ? titleCase(txt) : txt.toUpperCase();
+  if(conv.length!==txt.length) return;   // some letters change length when re-cased; leave those alone
+  let i=0; for(const n of nodes){ const [a,b]=part(n); if(n.nodeType!==3){ i++; continue; } n.nodeValue=n.nodeValue.slice(0,a)+conv.slice(i,i+b-a)+n.nodeValue.slice(b); i+=b-a; }
+  const r=document.createRange(); r.setStart(sc,so); r.setEnd(ec,eo); sl.removeAllRanges(); sl.addRange(r);
+  positionEditor();
+}
+const titleCase=t=>t.toLowerCase().replace(/(^|[\s\-\/(])(\S)/g,(m,a,b)=>a+b.toUpperCase());
+// {GROUP} / {Group} / {group} drop in the group name in that case, so a re-cased box still follows the group name
+const GROUP_CASES=[["{GROUP}",g=>g.toUpperCase()],["{Group}",titleCase],["{group}",g=>g.toLowerCase()]], boxGroup=()=>(S.group||"").trim()||"Group Name";
+const boxGroupIn=t=>String(t||"").replace(/\{group\}/gi,m=>(GROUP_CASES.find(c=>c[0]===m)||GROUP_CASES[0])[1](boxGroup()));
+// the box keeps its text as card markup: **bold** __underline__ [[red]], with {GROUP} for the group name
+function boxMarkup(lines, bb){ let t=lines.map(l=>l.map(r=>{ let x=r.text; if(!x.trim()) return x;
+    if(r.bold&&!bb.bold) x=`**${x}**`; if(r.underline&&!bb.underline) x=`__${x}__`; if(r.color===RED&&(bb.color||NAVY)!==RED) x=`[[${x}]]`; return x; }).join("")).join("\n");
+  for(const [tok,f] of GROUP_CASES) t=t.split(f(boxGroup())).join(tok);
+  return t; }
 function src0(items,base){ return items[0].src.map(r=>toStored(r,base)); }
 function positionEditor(){
   const d=$("#inlined"); if(!d||!editing) return;
-  const cv=$("#preview"), s=cv.getBoundingClientRect().width/W, it=editorItems(editing.el)[0]||{}, tx=editing.tx;
+  const cv=$("#preview"), cr=cv.getBoundingClientRect(), fr=$("#fit").getBoundingClientRect(), ox=cr.left-fr.left, oy=cr.top-fr.top;   // the flyer is centred inside #fit
+  const s=cr.width/W, it=editorItems(editing.el)[0]||{}, tx=editing.tx;
   const b=editing.base, size=(tx?tx.size:(baseOf(it.runs||[b]).size||b.size));
-  const lh=(it.lh||size*1.2)*s, align=tx?tx.align:"center", w=(it.w||780)*s;
+  const lh=(it.lh||size*1.2)*s, align=tx?tx.align:it.align||"center", w=(it.w||780)*s;
   d.style.fontFamily = b.fam==="head" ? `"${HEAD}", Impact, sans-serif` : `"${BODY}", Arial, sans-serif`;
   d.style.fontSize=(size*s)+"px"; d.style.lineHeight=lh+"px"; d.style.textAlign=align; d.style.color=b.color;
   const cx=(it.cx??W/2)*s; d.style.width=w+"px";
-  d.style.left=(align==="left"?cx:align==="right"?cx-w:cx-w/2)+"px";
-  d.style.top=((it.base??600)*s - size*s*0.92 - (lh-size*s*1.2)/2)+"px";
+  d.style.left=ox+(align==="left"?cx:align==="right"?cx-w:cx-w/2)+"px";
+  d.style.top=oy+((it.base??600)*s - size*s*0.92 - (lh-size*s*1.2)/2)+"px";
 }
 function parseEditor(d, base){
   const lines=[[]];
@@ -1089,7 +1119,9 @@ function closeEditor(commit){
   const d=$("#inlined"); if(!d){ editing=null; $("#tbar").hidden=true; return; }
   const before=snap();
   if(commit&&editing){ const lines=parseEditor(d,editing.base);
-    if(editing.tx){ const empty=lines.every(l=>!l.some(r=>r.text.trim())); if(empty) S.texts=S.texts.filter(t=>t!==editing.tx); else { editing.tx.lines=lines; delete editing.tx.text; } }
+    if(editing.box){ const bb=editing.box, t=boxMarkup(lines,bb), typed=t!==t.toUpperCase();
+      if(t!==bb.text||typed!==!!bb.asTyped){ remember(JSON.stringify({box:S.box})); bb.text=t; if(typed) bb.asTyped=true; else delete bb.asTyped; syncUI(); } }
+    else if(editing.tx){ const empty=lines.every(l=>!l.some(r=>r.text.trim())); if(empty) S.texts=S.texts.filter(t=>t!==editing.tx); else { editing.tx.lines=lines; delete editing.tx.text; } }
     else if(JSON.stringify(lines)===editing.orig) delete S.ov[editing.el]; else S.ov[editing.el]={lines}; }
   if(snap()!==before) remember(before);
   d.remove(); editing=null; $("#tbar").hidden=true; editUI(); schedule();
@@ -1261,7 +1293,7 @@ function render(){
   const cssW=Math.max(240, Math.min(fit.clientWidth, maxH*W/H, 816));
   cv.style.width=cssW+"px"; cv.style.height=(cssW*H/W)+"px";
   const pw=Math.round(cssW*dpr); if(cv.width!==pw){ cv.width=pw; cv.height=Math.round(pw*H/W); }
-  renderTo(cv, editing ? layout.filter(i=>i.el!==editing.el) : layout, cv.width/W);
+  renderTo(cv, editing ? layout.filter(i=>i.el!==editing.el&&i.block!==editing.el) : layout, cv.width/W);
   drawEditOverlay(cv); positionEditor();
   $("#filename").textContent = "File name: "+fileBase();
   $("#boxgone").hidden = !(S.adj.box||{}).hidden;
@@ -1678,7 +1710,9 @@ function wire(){
     const st=e.shiftKey?10:1, m={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,-st],ArrowDown:[0,st]}[e.key];
     if(m){ e.preventDefault(); nudge(...m); }
     else if((e.key==="Delete"||e.key==="Backspace")&&!$("#selremove").hidden){ e.preventDefault(); $("#selremove").click(); } });
-  cv.addEventListener("dblclick",e=>{ if(!editMode) return; const h=hitTest(pagePt(e)); if(h&&isText(h.el)) openEditor(h.el); });
+  cv.addEventListener("dblclick",e=>{ if(!editMode) return; const p=pagePt(e), h=hitTest(p); if(!h||!isText(h.el)) return;
+    if(h.el==="box"){ const near=i=>Math.abs(i.base-i.lh*0.35-p.y); openEditor(editorItems("box").reduce((a,b)=>near(b)<near(a)?b:a).block); }   // the top or bottom block, whichever is nearer
+    else openEditor(h.el); });
   $("#addtext").addEventListener("click",()=>{ const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
     if(!editMode) setEdit(true);
     remember(); S.texts.push({id,lines:[[{text:"NEW TEXT",bold:true}]],font:"body",size:32,color:NAVY,align:"center",cx:W/2,base:600});
@@ -1689,7 +1723,16 @@ function wire(){
   $$("#tbar [data-color]").forEach(b=>b.addEventListener("click",()=>{ document.execCommand("foreColor",false,b.dataset.color); }));
   $$("#tbar [data-talign]").forEach(b=>b.addEventListener("click",()=>{ const t=editing&&editing.tx; if(!t) return; const bx=curBoxes()[editing.el]; t.align=b.dataset.talign; if(bx) t.cx=t.align==="left"?bx.x:t.align==="right"?bx.x+bx.w:bx.x+bx.w/2; render(); tbState(); }));
   $("#tbfont").addEventListener("change",e=>{ const t=editing&&editing.tx; if(!t) return; t.font=e.target.value; editing.base.fam=t.font; render(); $("#inlined")?.focus(); });
-  $("#tbsize").addEventListener("input",e=>{ const t=editing&&editing.tx, v=+e.target.value; if(!t||!(v>=6&&v<=120)) return; t.size=v/0.75; editing.base.size=t.size; render(); });
+  let sizeBefore=null; const sizeSnap=()=>editing&&editing.box?JSON.stringify({box:S.box}):snap();
+  $("#tbsize").addEventListener("focus",()=>{ sizeBefore=sizeSnap(); });
+  $("#tbsize").addEventListener("change",()=>{ if(sizeBefore&&sizeSnap()!==sizeBefore) remember(sizeBefore); sizeBefore=sizeSnap(); });
+  $("#tbsize").addEventListener("input",e=>{ const t=editing&&editing.tx, v=+e.target.value; if(!editing||!(v>=6&&v<=120)) return;
+    if(editing.box){ editing.box.size=Math.max(8,Math.min(30,v)); syncUI(); }   // same 8–30 pt range as the box card
+    else if(t){ t.size=v/0.75; editing.base.size=t.size; }
+    else { const el=editing.el, a={dx:0,dy:0,sx:1,sy:1,...(S.adj[el]||{})}, cur=baseOf(editorItems(el)[0].runs).size;   // template text: scale the item about its centre
+      const k=Math.min(a.sx,a.sy)*(v/0.75)/cur; S.adj[el]={...a,sx:k,sy:k}; }
+    render(); });
+  $("#tbcase").addEventListener("click",changeCase);
   $("#tbdone").addEventListener("click",()=>closeEditor(true));
   $("#tbundo").addEventListener("click",()=>{ if(!editing) return; const el=editing.el; remember(); delete S.ov[el]; $("#inlined")?.remove(); editing=null; $("#tbar").hidden=true; editUI(); render(); toast("Back to the original wording."); });
   document.addEventListener("selectionchange",tbState);
