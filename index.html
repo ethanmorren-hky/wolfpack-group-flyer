@@ -182,6 +182,27 @@ details.step.done+details.step::before{background:var(--ok)}
 .menu .mi small{color:var(--muted);font-weight:400}
 .menu hr{border:0;border-top:1px solid var(--line);margin:5px 4px}
 .menu .opt{padding:6px 10px 8px;display:flex;flex-direction:column;gap:4px}
+/* Group flyer checklist: a dropdown in the top bar; the button itself carries the summary */
+.top{position:relative}
+.todo{position:relative}
+.todobtn{display:flex;align-items:center;gap:8px;height:38px}
+.todosum{font-weight:500;font-size:12.5px;color:var(--muted)}
+.todosum .soon{color:var(--red);font-weight:700}
+.todopanel{width:390px;max-width:calc(100vw - 32px);padding:12px;flex-direction:column;gap:10px}
+.todopanel.open{display:flex}
+.todopanel form{display:flex;flex-direction:column;gap:8px}
+.more summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
+.more .field,.more .grid2{margin-top:8px}
+.flist .it.cur{background:var(--chip)}
+.due{flex:none;font-size:11.5px;font-weight:700;color:var(--warnfg);background:var(--warnbg);border-radius:999px;padding:2px 8px;max-width:130px;text-align:center;line-height:1.3}
+.due.late{color:var(--red)}
+.donecheck{color:var(--ok);font-weight:700;margin-right:5px}
+.tstage{display:inline-flex;gap:3px;margin-left:8px;vertical-align:middle}
+.tstage i{width:14px;height:5px;border-radius:3px;background:var(--line)}
+.tstage.s1 i:nth-child(1),.tstage.s2 i:nth-child(-n+2){background:var(--accent)}
+.tstage.s3 i{background:var(--ok)}
+@media (max-width:600px){ .todo{position:static} .todopanel{left:0;right:0;width:auto;max-width:none} }
+@media (min-width:601px){ .brand h1{white-space:nowrap} }   /* the Game menu and Checklist wrap below the title instead of squeezing it */
 .modal{position:fixed;inset:0;background:rgba(5,10,20,.7);display:flex;align-items:center;justify-content:center;padding:16px;z-index:30}
 .modal .box{background:var(--panel);border-radius:10px;padding:14px;max-width:min(560px,100%);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:10px}
 .guide .box{max-width:min(640px,100%);gap:12px;padding:18px 20px}
@@ -204,6 +225,18 @@ details.step.done+details.step::before{background:var(--ok)}
   #printimg{display:block!important;width:8.5in;height:11in;margin:0}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* Guided tour: a ring around the real control, the rest of the page dimmed, and a caption card beside it */
+#ask{z-index:45}   /* a checklist question during the tour shows above its dimming */
+#tourring{position:fixed;z-index:40;border-radius:10px;pointer-events:none;box-shadow:0 0 0 3px var(--accent),0 0 0 200vmax rgba(5,10,20,.62);transition:top .35s,left .35s,width .35s,height .35s}
+#tourcard{position:fixed;z-index:41;width:min(340px,calc(100vw - 32px));background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:8px;box-shadow:0 14px 34px rgba(5,10,20,.35);transition:top .35s,left .35s}
+#tourcard h3{font-family:var(--display);font-size:24px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:0;line-height:1.05}
+#tourcard p{margin:0;font-size:14px;line-height:1.45}
+#tourx{border:0;background:none;color:var(--muted);font-size:20px;line-height:1;padding:2px 6px;cursor:pointer}
+.tprog{height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.tprog span{display:block;height:100%;width:0;background:var(--accent)}
+.tprog span.run{animation:tourfill 8s linear forwards}
+#tour.paused .tprog span{animation-play-state:paused}
+@keyframes tourfill{to{width:100%}}
 </style>
 </head>
 <body>
@@ -216,6 +249,21 @@ details.step.done+details.step::before{background:var(--ok)}
   <div class="field" style="flex:1 1 320px;max-width:460px">
     <label for="game">Game</label>
     <select id="game"></select>
+  </div>
+  <div class="todo" id="todo">
+    <button class="btn todobtn" id="todobtn" type="button" aria-expanded="false" aria-controls="todopanel">Checklist <span class="todosum" id="todosum"></span> <span aria-hidden="true">▾</span></button>
+    <div class="menu todopanel" id="todopanel" role="dialog" aria-label="Group flyer checklist">
+      <b id="todowho"></b>
+      <form id="todoadd">
+        <div class="row" style="flex-wrap:nowrap"><input type="text" id="t-group" placeholder="Group name" aria-label="Group name to add" autocomplete="off"><button class="btn primary" type="submit">Add</button></div>
+        <details class="more"><summary>Add the game, price and link (optional)</summary>
+          <div class="field"><label for="t-game">Game</label><select id="t-game"></select></div>
+          <div class="grid2"><div class="field"><label for="t-price">Ticket price</label><input type="text" id="t-price" inputmode="decimal" placeholder="24.99"></div>
+            <div class="field"><label for="t-link">FEVO link</label><input type="url" id="t-link" placeholder="Paste link"></div></div>
+        </details>
+      </form>
+      <div class="flist" id="tlist"></div>
+    </div>
   </div>
   <button class="themebtn" id="themebtn" type="button" title="Light or dark mode"><svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 2a8 8 0 0 0 0 16z" fill="currentColor"/></svg></button>
 </div>
@@ -319,7 +367,7 @@ details.step.done+details.step::before{background:var(--ok)}
     </details>
 
     <details class="card">
-      <summary><h2>Logos</h2><span class="tip"><button type="button" class="q" aria-label="Help" aria-describedby="t-logo">?</button><span class="tipbox" role="tooltip" id="t-logo">The opponent logo changes with the game. An added logo (a youth organization, a sponsor) goes on top of the flyer and never replaces the opponent: it appears in the middle, ready to drag into place, and Manual edit turns on for you. If an uploaded logo sits on a white or solid box, select it and click <b>Remove background</b>. Every logo you add stays as a tile under <b>Added logos</b>; click a tile to put it on the flyer again.</span></span></summary>
+      <summary><h2>Logos</h2><span class="tip"><button type="button" class="q" aria-label="Help" aria-describedby="t-logo">?</button><span class="tipbox" role="tooltip" id="t-logo">The opponent logo changes with the game. An added logo (the group’s own, or another organization’s) goes on top of the flyer and never replaces the opponent: it appears in the middle, ready to drag into place, and Manual edit turns on for you. If an uploaded logo sits on a white or solid box, select it and click <b>Remove background</b>. Every logo you add stays as a tile under <b>Added logos</b>; click a tile to put it on the flyer again.</span></span></summary>
       <div class="body">
         <div class="logo-row">
           <div class="pv" id="opppv"></div>
@@ -426,7 +474,7 @@ details.step.done+details.step::before{background:var(--ok)}
     </section>
   </aside>
 </div>
-<p class="pagefoot"><span id="appver"></span> · New here? <button class="linkbtn" id="openguide" type="button">How the flyer builder works</button></p>
+<p class="pagefoot"><span id="appver"></span> · New here? <button class="linkbtn" data-tour type="button">Take the 1-minute tour</button> or read <button class="linkbtn" id="openguide" type="button">how the flyer builder works</button></p>
 
 <div class="modal guide" id="guide" hidden role="dialog" aria-modal="true" aria-labelledby="g-title"><div class="box">
   <h2 id="g-title">How the flyer builder works</h2>
@@ -445,7 +493,7 @@ details.step.done+details.step::before{background:var(--ok)}
     <li>Tick <b>Manual edit</b> to unlock the flyer. Drag items to move them, drag the corner handle to resize, and drag a logo’s side handles to reshape it. Arrow keys nudge.</li>
     <li>Double-click any text on the flyer to type over it. A toolbar appears at the top of the flyer for bold, italic, underline, superscript, subscript and color. Click <b>Done</b> (or anywhere else) when finished.</li>
     <li><b>Add text</b> drops a new line on the flyer; its toolbar also has font, size and alignment.</li>
-    <li>Add extra logos (a group’s own logo, a sponsor, or any AHL team) with <b>Add another logo</b> in the Logos card. They never replace the opponent.</li>
+    <li>Add extra logos (a group’s own logo, another organization’s, or any AHL team) with <b>Add another logo</b> in the Logos card. They never replace the opponent.</li>
     <li>Unticking locks everything where you left it. Nothing resets unless you click <b>Put this item back</b> or <b>Reset all to template</b>.</li>
   </ul>
   <h3>QR test run</h3>
@@ -465,10 +513,25 @@ details.step.done+details.step::before{background:var(--ok)}
   </ul>
   <div class="row foot">
     <label><input type="checkbox" id="guidehide"> Don't show this again</label>
-    <button class="btn primary" id="guideclose" type="button">Got it</button>
+    <span class="row"><button class="btn" id="guideclose" type="button">Got it</button><button class="btn primary" data-tour type="button">Take the 1-minute tour</button></span>
   </div>
 </div></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div id="tour" hidden>
+  <div id="tourring"></div>
+  <div id="tourcard" role="dialog" aria-modal="true" aria-labelledby="tourtitle">
+    <div class="row" style="justify-content:space-between"><span class="lbl" id="tourcount"></span><button id="tourx" type="button" aria-label="End the tour" title="End the tour (Esc)">×</button></div>
+    <h3 id="tourtitle"></h3>
+    <p id="tourtext" aria-live="polite"></p>
+    <p class="warn" id="tourmiss" hidden><span id="tourmisstext"></span> <button class="linkbtn" id="tourreview" type="button">Review them</button></p>
+    <div class="tprog"><span id="tourprog"></span></div>
+    <div class="row"><button class="btn small" id="tourback" type="button">Back</button><button class="btn small" id="tourpause" type="button">Pause</button><span class="grow"></span><button class="btn small primary" id="tournext" type="button">Next</button></div>
+  </div>
+</div>
+<div class="modal" id="ask" hidden role="alertdialog" aria-modal="true" aria-labelledby="askmsg"><div class="box">
+  <p id="askmsg" style="margin:0;font-size:15px;line-height:1.45"></p>
+  <div class="row" style="justify-content:flex-end"><button class="btn" id="askno" type="button"></button><button class="btn primary" id="askyes" type="button"></button></div>
+</div></div>
 
 <script>
 /* =====================================================================
@@ -545,7 +608,7 @@ const CDN = {
   pdf:  ["https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js","https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"],
 };
 
-const APP_VERSION = "1.8.1 · Oct 30, 2026";   // shown at the bottom of the page so you can confirm GitHub is serving the newest file
+const APP_VERSION = "1.9 · Nov 1, 2026";   // shown at the bottom of the page so you can confirm GitHub is serving the newest file
 const W = 816, H = 1056;                 // 8.5 × 11 in at 96 px/in (same as the template slide)
 const NAVY = "#1F2358", RED = "#F2232A", WHITE = "#FFFFFF";
 const HEAD = "TaurunumW00-Tall", BODY = "Azo Sans";   // the template's typefaces
@@ -556,10 +619,11 @@ const DEF_BOT = "PROMO/THEME NIGHT INFO OR\nACTIVITIES GROUP ARE DOING!";
 /* ------------------------------ small helpers ------------------------------ */
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
+let sandbox=null;   // during the guided tour, saves land here and are thrown away when it ends
 const store = {
-  get(k,d){ try{ const v=localStorage.getItem(LS+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } },
-  set(k,v){ try{ localStorage.setItem(LS+k, JSON.stringify(v)); return true; }catch(e){ return false; } },
-  del(k){ try{ localStorage.removeItem(LS+k); }catch(e){} },
+  get(k,d){ if(sandbox&&sandbox.has(k)){ const v=sandbox.get(k); return v==null?d:JSON.parse(v); } try{ const v=localStorage.getItem(LS+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } },
+  set(k,v){ if(sandbox){ sandbox.set(k,JSON.stringify(v)); return true; } try{ localStorage.setItem(LS+k, JSON.stringify(v)); return true; }catch(e){ return false; } },
+  del(k){ if(sandbox){ sandbox.set(k,null); return; } try{ localStorage.removeItem(LS+k); }catch(e){} },
 };
 const slug = s => String(s||"").toLowerCase().replace(/&/g,"and").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -608,6 +672,7 @@ function defaults(){
     ov:{},       // manual-edit text changes to template items: {element: text}
     texts:[],    // text added in manual edit: {id,text,font,size,bold,italic,underline,color,align,cx,base}
     done:[],     // left-rail steps finished with Next / Done (shown green)
+    task:null,   // the checklist task this flyer was opened from
   };
 }
 function merge(base, over){ if(!over||typeof over!=="object") return base; for(const k in over){ if(!(k in base)) continue; if(k==="adj"||k==="ov"){ base[k]=(over[k]&&typeof over[k]==="object")?over[k]:{}; continue; } if(base[k]&&typeof base[k]==="object"&&!Array.isArray(base[k])) merge(base[k],over[k]); else base[k]=over[k]; } return base; }
@@ -1324,6 +1389,7 @@ async function makePptx(){
 // Inside a Claude artifact, files go through the viewer's save prompt; on GitHub Pages, a normal browser download.
 let DL=null; const dlReady=(window.claude&&window.claude.use) ? window.claude.use("downloads").then(d=>{ DL=d; return d; }).catch(()=>null) : Promise.resolve(null);
 async function save(blob,name){
+  if(sandbox){ toast("Tour practice: nothing was downloaded."); return false; }
   await dlReady;
   if(DL){ try{ await DL.save({filename:name, data:blob}); return true; }
     catch(e){ if(e&&e.code==="declined") toast("Download cancelled."); else if(e&&e.code==="rate_limited") toast("Finish the open save prompt first."); else toast("Couldn’t save that file here ("+(e&&e.code||"error")+")."); return false; } }
@@ -1332,6 +1398,7 @@ async function save(blob,name){
 function saveAnchor(blob,name){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },4000); }
 async function doExport(fmt){
   closeMenu(); const dpi=300, base=fileBase();
+  if(sandbox){ toast(`Tour practice: in real use this downloads ${base}.${fmt} and files it in Recent flyers.`,4500); addRecent(); return; }
   if(!A.opp) toast(`No ${S.opp} logo yet, so the flyer shows a dashed box there.`,3500);
   try{
     let blob, ext=fmt;
@@ -1344,6 +1411,7 @@ async function doExport(fmt){
   }catch(e){ console.error(e); toast(e.message==="load failed" ? "Couldn’t reach the download helper. Check the internet connection and try again." : "That didn’t work: "+e.message, 5000); }
 }
 async function doPrint(){
+  if(sandbox){ toast("Tour practice: in real use this prints the flyer and files it in Recent flyers.",4500); addRecent(); return; }
   const b=$("#printbtn"); b.disabled=true; b.textContent="Preparing…";
   try{
     let img=$("#printimg"); if(!img){ img=document.createElement("img"); img.id="printimg"; img.alt=""; document.body.appendChild(img); }
@@ -1363,16 +1431,83 @@ function qrSvg(m){ const n=m.length, q=4, s=n+q*2; let d=""; m.forEach((r,y)=>r.
 // Recent flyers are filed under the rep named on the flyer; the list shows the selected rep's only.
 const repOf=r=>((r.s&&r.s.rep&&r.s.rep.name)||"").trim()||"No rep";
 let askDel=null;
-function addRecent(){
-  const n=fileBase(), who=repOf({s:S}), l=store.get("recent",[]).filter(r=>!(r.name===n&&repOf(r)===who));
-  l.unshift({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5), name:n, at:Date.now(), s:JSON.parse(JSON.stringify(S))});
+function addRecent(ask=true){ // ask: offer to tick off a checklist task (not when work is filed away automatically)
+  const n=fileBase(), who=repOf({s:S}), all=store.get("recent",[]), old=all.find(r=>r.name===n&&repOf(r)===who), l=all.filter(r=>r!==old), id=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  l.unshift({id, name:n, at:Date.now(), s:JSON.parse(JSON.stringify(S)), ...(old&&old.done?{done:true}:{})});   // a re-save keeps its completed check
   const per={}; const kept=l.filter(r=>{ const k=repOf(r); per[k]=(per[k]||0)+1; return per[k]<=60; });   // up to 60 per rep
   if(!store.set("recent",kept)) store.set("recent",kept.slice(0,40));
-  renderRecent();
+  renderRecent(); if(ask) finishTask(id);
 }
+
+/* ------------------------------ group flyer checklist ------------------------------ */
+// Each rep's to-do list of groups that still need a flyer, kept in this browser like Recent flyers.
+const todoAll=()=>store.get("todo",[]), todoMine=()=>todoAll().filter(t=>t.rep===repOf({s:S})), todoSave=l=>store.set("todo",l);
+const daysTo=d=>{ const x=parseDate(d); return x?Math.round((x-parseDate(isoDate(new Date())))/864e5):null; };
+// "Upcoming" is about the order deadline (the flyer's default: the Friday about two weeks before the game):
+// within a week, or already passed while the game is still ahead
+const dlDays=t=>t.date&&daysTo(t.date)>=0 ? daysTo(defaultDeadline(t.date)) : null;
+const isSoon=t=>{ const n=dlDays(t); return n!=null&&n<=7; };
+const mmdd=d=>`${d.getMonth()+1}/${d.getDate()}`;
+const STAGES={todo:{n:1,label:"Not started"}, progress:{n:2,label:"In progress"}, saved:{n:3,label:"Flyer saved, not marked done"}};
+function renderTodo(){
+  const who=repOf({s:S}), mine=todoMine().sort((a,b)=>(a.date||"9999").localeCompare(b.date||"9999")||a.at-b.at);   // dated games first, soonest on top
+  const cnt=s=>mine.filter(t=>(t.status||"todo")===s).length, ns=cnt("todo"), ip=cnt("progress"), sv=cnt("saved"), due=mine.filter(isSoon).length;
+  $("#todosum").innerHTML = mine.length ? [ns&&`${ns} not started`, ip&&`${ip} in progress`, sv&&`${sv} saved`, due&&`<span class="soon">${due} deadline${due===1?"":"s"} soon</span>`].filter(Boolean).join(" · ") : "nothing to do";
+  $("#todowho").textContent = who==="No rep" ? "Checklist (pick a rep under Sales rep)" : `${who}’s checklist`;
+  const el=$("#tlist"); el.innerHTML = mine.length ? "" : `<div class="empty">No groups yet. Add one above.</div>`;
+  for(const t of mine){
+    const d=parseDate(t.date), g=d&&SCHEDULE.find(x=>x[0]===t.date), n=dlDays(t), row=document.createElement("div");
+    row.className="it"+(t.id===S.task?" cur":"");
+    const badge=!isSoon(t)?"" : n<0?`<span class="due late">Order deadline passed</span>` : `<span class="due">Order deadline ${n===0?"today":n===1?"tomorrow":`in ${n} days`}</span>`;
+    row.innerHTML=`<button class="open" type="button" data-topen="${t.id}" title="Make the flyer for this group"><b></b><span></span></button>${badge}<button class="x" type="button" data-tdel="${t.id}">×</button>`;
+    // stage bar: added → in progress → flyer saved (a saved task waits only for "Mark done")
+    const st=STAGES[t.status]||STAGES.todo;
+    row.querySelector("b").textContent=t.group;
+    row.querySelector("b").insertAdjacentHTML("beforeend",`<span class="tstage s${st.n}" title="${st.label}" aria-hidden="true"><i></i><i></i><i></i></span>`);
+    row.querySelector(".open > span").textContent=[st.label, d&&`Game ${mmdd(d)}${g?` vs ${g[2]}`:""}${daysTo(t.date)<0?" (played)":""}`].filter(Boolean).join(" · ");
+    row.querySelector(".x").setAttribute("aria-label",`Remove ${t.group} from the checklist`);
+    el.appendChild(row);
+  }
+}
+function openTask(id){ // makes the flyer for a task without ever writing over other work
+  const l=todoAll(), t=l.find(x=>x.id===id); if(!t) return;
+  if(t.status!=="saved") t.status="progress"; todoSave(l); closeTodo();   // a saved flyer keeps its stage when reopened
+  const gi=t.date?SCHEDULE.findIndex(g=>g[0]===t.date):-1, D=defaults();
+  if((S.group||"").trim().toLowerCase()===t.group.trim().toLowerCase()){
+    // same group: keep everything, only fill in what the flyer is still missing (a game or price still at the template's default counts as missing)
+    if(gi>=0&&S.game===D.game) applyGame(gi);
+    if(t.price&&(!String(S.price).trim()||S.price===D.price)) S.price=t.price;
+    if(t.link&&!String(S.link).trim()) S.link=t.link;
+    S.task=t.id; syncUI(); renderTodo(); resolveOpp().then(schedule); schedule(); toast(`This flyer is now linked to ${t.group}; missing details filled in.`,4000); return;
+  }
+  // different group: file the current work in Recent flyers first, then start a fresh flyer (same rep) for the task
+  let note="";
+  if((S.group||"").trim()||(S.link||"").trim()||adjCount()){ note=`Saved “${fileBase()}” to Recent flyers. `; addRecent(false); }
+  const fresh=D; fresh.rep={...S.rep}; loadState(fresh);
+  S.task=t.id; S.group=t.group; if(gi>=0) applyGame(gi); if(t.price) S.price=t.price; if(t.link) S.link=t.link;
+  syncUI(); renderTodo(); resolveOpp().then(schedule); schedule(); toast(`${note}New flyer for ${t.group}.`,4500);
+}
+async function finishTask(rid){ // after a download or print: offer to tick the group off; a flyer not from the list is only asked about on an exact name match
+  const mine=todoMine(), name=(S.group||"").trim().toLowerCase();
+  let t=mine.find(x=>x.id===S.task);
+  if(!t){ t=name&&mine.find(x=>x.group.trim().toLowerCase()===name); if(!t) return;
+    if(!await ask(`“${t.group}” is on your checklist. Is this flyer for that same group?`,"Yes, same group","No, a different group")) return;
+    S.task=t.id; schedule(); }
+  if(!await ask(`Flyer saved. Mark “${t.group}” as done and take it off your checklist?`,"Mark done","Not yet")){
+    const l=todoAll(), x=l.find(v=>v.id===t.id); if(x){ x.status="saved"; todoSave(l); } renderTodo(); return; }
+  todoSave(todoAll().filter(v=>v.id!==t.id)); S.task=null;
+  const rl=store.get("recent",[]), saved=rl.find(r=>r.id===rid); if(saved){ saved.done=true; store.set("recent",rl); }   // the green check in Recent flyers
+  schedule(); renderRecent(); toast(`${t.group} is done and off your checklist.`);
+}
+function ask(msg, yes, no){ // a small yes/no dialog; Escape or the second button answers no
+  return new Promise(res=>{ const m=$("#ask"); $("#askmsg").textContent=msg; $("#askyes").textContent=yes; $("#askno").textContent=no; m.hidden=false; $("#askyes").focus();
+    const done=v=>{ m.hidden=true; $("#askyes").onclick=$("#askno").onclick=null; res(v); }; $("#askyes").onclick=()=>done(true); $("#askno").onclick=()=>done(false); });
+}
+const closeTodo=()=>{ $("#todopanel").classList.remove("open"); $("#todobtn").setAttribute("aria-expanded","false"); };
 function renderRecent(){
   const all=store.get("recent",[]); all.forEach((r,i)=>{ if(!r.id) r.id="r"+i+"_"+r.at; });
   const who=repOf({s:S}), list=all.filter(r=>repOf(r)===who), el=$("#recent");
+  renderTodo();   // the checklist is per rep too
   $("#recentwho").textContent = who==="No rep" ? "Flyers with no rep" : `${who}’s flyers`;
   el.innerHTML = list.length ? "" : `<div class="empty">Nothing yet. Flyers you download or print land here.</div>`;
   for(const r of list){
@@ -1384,6 +1519,7 @@ function renderRecent(){
       row.innerHTML=`<button class="open" type="button" title="Reopen this flyer"><b></b><span></span></button><button class="x" type="button" data-ask="${r.id}" aria-label="Delete this flyer" title="Delete">×</button>`;
       row.querySelector("b").textContent=r.name;
       row.querySelector(".open span").textContent=`saved ${MON3[d.getMonth()]} ${d.getDate()}, ${d.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"})}`;
+      if(r.done) row.querySelector("b").insertAdjacentHTML("afterbegin",`<span class="donecheck" title="Completed checklist task" aria-label="Completed checklist task:">✓</span>`);
       row.querySelector(".open").onclick=()=>{ loadState(r.s); toast("Reopened "+r.name); };
     }
     el.appendChild(row);
@@ -1409,6 +1545,7 @@ function fillMenus(){
   g.innerHTML = SCHEDULE.map((x,i)=>{ const d=parseDate(x[0]); return `<option value="${i}">${DAY3[d.getDay()]} ${MON3[d.getMonth()]} ${d.getDate()} · ${x[1]} · vs ${esc(x[2])}${x[0]<today?" (played)":""}</option>`; }).join("");
   const t=[]; for(let h=9;h<=21;h++) for(const m of [0,30]){ const hh=h%12||12, ap=h<12?"AM":"PM"; t.push(m?`${hh}:30${ap}`:(h===12?"NOON":`${hh}${ap}`)); }
   $("#f-dltime").innerHTML=t.map(x=>`<option>${x}</option>`).join("");
+  $("#t-game").innerHTML=`<option value="">No game yet</option>`+SCHEDULE.filter(x=>x[0]>=today).map(x=>{ const d=parseDate(x[0]); return `<option value="${x[0]}">${DAY3[d.getDay()]} ${MON3[d.getMonth()]} ${d.getDate()} · vs ${esc(x[2])}</option>`; }).join("");
   fillReps();
 }
 const allReps=()=>[...REPS.map((r,i)=>({...r,key:"cfg:"+i})), ...store.get("reps",[]).map((r,i)=>({...r,key:"loc:"+i,local:true}))];
@@ -1439,8 +1576,10 @@ function onField(el){
 function nextStep(d){ // mark this card finished, close it and open the next one; cards someone opened by hand stay open
   const steps=$$(".rail details.step"), i=steps.indexOf(d), n=steps[i+1];
   if(!S.done.includes(i)) S.done.push(i); markSteps(); schedule();
-  d.open=false; if(!n){ $("#dlbtn").focus(); return; }   // last step: on to Download
-  n.open=true; n.querySelector("input:not([type=checkbox]),textarea,select")?.focus({preventScroll:true}); n.scrollIntoView({block:"nearest"});
+  d.open=false;
+  if(n){ n.open=true; n.querySelector("input:not([type=checkbox]),textarea,select")?.focus({preventScroll:true}); n.scrollIntoView({block:"nearest"}); }
+  else $("#dlbtn").focus();   // last step: on to Download
+  if(tourAt>=0){ tourPlay(); tourGo(n ? TOUR.findIndex(s=>s.open===$$(".rail details").indexOf(n)) : tourAt+1); }   // the tour follows, countdown restarted
 }
 function closeMenu(){ $("#dlmenu").classList.remove("open"); $("#dlbtn").setAttribute("aria-expanded","false"); }
 
@@ -1458,8 +1597,19 @@ function wire(){
     const co=e.target.closest("[data-col]"); if(co){ const [p,c]=co.dataset.col.split(":"); setPath(S,p+".color",c); syncUI(); schedule(); return; }
     const dl=e.target.closest("[data-dl]"); if(dl){ if(dl.dataset.dl==="reset"){ S.dl.manual=false; S.dl.date=defaultDeadline(S.date); } else { S.dl.date=addDays(S.dl.date||S.date,+dl.dataset.dl); S.dl.manual=true; } syncUI(); schedule(); return; }
     if(!e.target.closest(".dl")) closeMenu();
+    if(!e.target.closest(".todo,#ask,#tourcard")) closeTodo();
   });
-  document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeMenu(); $$(".tip.open").forEach(x=>x.classList.remove("open")); if(!$("#guide").hidden) closeGuide(); } });
+  $("#todobtn").addEventListener("click",()=>{ const o=$("#todopanel").classList.toggle("open"); $("#todobtn").setAttribute("aria-expanded",o); if(o){ closeMenu(); $("#t-group").focus(); } });
+  $("#todoadd").addEventListener("submit",e=>{ e.preventDefault(); const name=$("#t-group").value.trim(); if(!name){ $("#t-group").focus(); return; }
+    const l=todoAll(); l.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5), rep:repOf({s:S}), group:name, date:$("#t-game").value, price:$("#t-price").value.trim(), link:$("#t-link").value.trim(), status:"todo", at:Date.now()});
+    if(!todoSave(l)) toast("Couldn’t save the checklist: browser storage is off.");
+    else toast(`${name} added to your checklist.`);
+    e.target.reset(); renderTodo(); $("#t-group").focus(); });
+  $("#tlist").addEventListener("click",async e=>{ const o=e.target.closest("[data-topen]"), x=e.target.closest("[data-tdel]");
+    if(o) openTask(o.dataset.topen);
+    if(x){ const t=todoAll().find(v=>v.id===x.dataset.tdel); if(!t||!await ask(`Remove “${t.group}” from your checklist?`,"Remove","Keep")) return;
+      todoSave(todoAll().filter(v=>v.id!==t.id)); if(S.task===t.id){ S.task=null; schedule(); } renderTodo(); toast(`${t.group} removed from your checklist.`); } });
+  document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!$("#ask").hidden){ $("#askno").click(); return; } if(e.key==="Escape"){ closeMenu(); closeTodo(); $$(".tip.open").forEach(x=>x.classList.remove("open")); if(!$("#guide").hidden) closeGuide(); } });
   // Enter in a one-line field finishes that card and opens the next (cards with a Next button only)
   $(".rail").addEventListener("keydown",e=>{ const d=e.target.closest("details.step");
     if(e.key==="Enter" && d && d.querySelector("[data-next]") && e.target.matches("input[type=text],input[type=url],input[type=email],input[type=tel]")){ e.preventDefault(); nextStep(d); } });
@@ -1485,6 +1635,27 @@ function wire(){
   $("#themebtn").addEventListener("click",()=>{ const t=document.documentElement.dataset.theme==="light"?"dark":"light"; document.documentElement.dataset.theme=t; store.set("theme",t); themeLabel(); });
   $("#openguide").addEventListener("click",()=>{ $("#guide").hidden=false; $("#guideclose").focus(); });
   $("#guideclose").addEventListener("click",closeGuide);
+  $$("[data-tour]").forEach(b=>b.addEventListener("click",startTour));
+  $("#tourprog").addEventListener("animationend",()=>tourGo(tourAt+1));
+  $("#tournext").addEventListener("click",()=>{ tourPlay(); tourGo(tourAt+1); });
+  $("#tourback").addEventListener("click",()=>{ tourPlay(); tourGo(tourAt-1); });
+  $("#tourpause").addEventListener("click",()=>{ const p=$("#tour").classList.toggle("paused"); $("#tourpause").textContent=p?"Play":"Pause"; });
+  $("#tourx").addEventListener("click",endTour);
+  window.addEventListener("resize",tourPlace); window.addEventListener("scroll",tourPlace,{passive:true});
+  // trying something on the page pauses the countdown; Play or Next carries on
+  // clicking another stop's part of the page jumps the tour there (paused, since they're trying it)
+  let tourJumped=false;
+  document.addEventListener("pointerdown",e=>{ if(tourAt<0||e.target.closest("#tourcard,#ask")) return; tourHold(); const j=tourStepAt(e.target); if(j>=0&&j!==tourAt){ tourGo(j); tourJumped=true; } },true);
+  // the tour just opened that card: the same click landing on its header must not close it again
+  document.addEventListener("click",e=>{ if(tourJumped&&e.target.closest("summary")) e.preventDefault(); tourJumped=false; },true);
+  document.addEventListener("input",tourHold,true);
+  // cards opening and closing move things: re-fit the ring after every click or keystroke
+  for(const ev of ["click","input","keyup"]) document.addEventListener(ev,()=>{ if(tourAt>=0) setTimeout(tourPlace,0); },true);
+  $("#tourreview").addEventListener("click",()=>{ const n=TOUR.findIndex((_,k)=>k<tourAt&&!tourSeen.has(k)); if(n>=0){ tourPlay(); tourGo(n); } });
+  // while the tour runs, Esc ends it; outside a typing field the arrows step and Space pauses
+  document.addEventListener("keydown",e=>{ if(tourAt<0) return; const k=e.key; if(k!=="Escape"&&typing(e.target)) return;
+    if(k==="Escape"||k==="ArrowRight"||k==="ArrowLeft"||(k===" "&&e.target.tagName!=="BUTTON")){ e.preventDefault(); e.stopImmediatePropagation();
+      if(k==="Escape") endTour(); else if(k==="ArrowRight") tourGo(tourAt+1); else if(k==="ArrowLeft") tourGo(tourAt-1); else $("#tourpause").click(); } }, true);
   $("#guide").addEventListener("click",e=>{ if(e.target.id==="guide") closeGuide(); });
   window.addEventListener("resize",schedule);
   window.addEventListener("resize",()=>updateBuyer());
@@ -1553,6 +1724,82 @@ function wire(){
     addExtra(await loadImage(d), f.name.replace(/\.[^.]+$/,""), key); });
 }
 function closeGuide(){ $("#guide").hidden=true; if($("#guidehide").checked) store.set("guideSeen",true); }
+
+/* ------------------------------ guided tour ------------------------------ */
+// Walks a new rep through the real page: a ring around each control in turn with one short line, moving on every 8 seconds
+// (the progress line's animation ends the step). Any click or typing on the page pauses it so they can try things out.
+// It runs on a blank practice flyer with saves sandboxed and downloads pretend; ending it brings back exactly what was there before.
+const railCard=n=>$$(".rail details")[n];   // rail order: 0 group … 4 rep, 5 manual edit, 6 logos, 7 recent flyers
+const TOUR=[
+  // uses: other parts of the page that belong to the stop, so clicking them doesn't jump the tour elsewhere
+  {el:()=>$("#game"), t:"Pick the game", x:"The date, time and opponent logo fill in for you. Try it."},
+  {el:()=>railCard(0), open:0, t:"Group & tickets", x:"Type the group name and price. Try it, then press Next."},
+  {el:()=>railCard(1), open:1, t:"FEVO link", x:"Paste the link. A QR code appears below it on the flyer."},
+  {el:()=>railCard(2), open:2, t:"Theme night box", x:"Write the theme night details. {GROUP} adds the group name."},
+  {el:()=>railCard(3), open:3, t:"Order deadline", x:"Set two Fridays before the game. Change it if you need to."},
+  {el:()=>railCard(4), open:4, t:"Sales rep", x:"Pick your name. Your contact info fills the bottom."},
+  {el:()=>$("#preview"), t:"Live preview", x:"The flyer updates as you type. What you see is what you get."},
+  {el:()=>$(".dl"), t:"Download or print", x:"Get a PNG, PDF, PowerPoint or JPEG, or print it."},
+  {el:()=>$("#buyertoggle"), uses:()=>[$("#buyer")], t:"QR test run", x:"Scan the QR code with your phone before the flyer goes out."},
+  {el:()=>railCard(5), open:5, uses:()=>[$("#fit"), ...$$(".editmode")], t:"Manual edit", x:"Tick it to drag things on the flyer. Backspace deletes, ⌘/Ctrl Z undoes."},
+  {el:()=>railCard(6), open:6, uses:()=>[$("#fit")], t:"Logos", x:"Add another organization’s logo. It lands beside the QR code."},
+  {el:()=>$("#todopanel"), uses:()=>[$("#todo")], todo:true, t:"Your checklist", x:"Add the groups you owe flyers. Click one to start it."},
+  {el:()=>railCard(7), open:7, t:"Recent flyers", x:"Every download is kept here to reopen later."},
+  {el:()=>$$(".rail .q")[0], t:"Need a hint?", x:"Every card has a ? with tips. Replay this tour from the bottom of the page."},
+];
+let tourAt=-1, tourKeep=null, tourSeen=new Set();
+function tourGo(i){
+  if(i<0) return; if(i>=TOUR.length) return endTour();
+  const s=TOUR[i], el=s.el();
+  if(s.todo) $("#todopanel").classList.add("open"); else closeTodo();   // before the size check: the panel only has a size when open
+  if(!el||!el.getClientRects().length){ tourSeen.add(i); return tourGo(i+(i>=tourAt?1:-1)); }   // not on screen at this width: skip it
+  tourAt=i; tourSeen.add(i);
+  $$(".rail details").forEach((d,n)=>d.open=s.open===n);
+  $("#tourcount").textContent=`${i+1} of ${TOUR.length}`; $("#tourtitle").textContent=s.t; $("#tourtext").textContent=s.x;
+  $("#tournext").textContent = i===TOUR.length-1 ? "Done" : "Next"; $("#tourback").disabled = i===0;
+  const missed=TOUR.map((_,n)=>n).filter(n=>n<i&&!tourSeen.has(n));   // stops jumped over by clicking ahead
+  $("#tourmiss").hidden=!missed.length; $("#tourmisstext").textContent=`You skipped ${missed.length} step${missed.length===1?"":"s"}.`;
+  const p=$("#tourprog"); p.classList.remove("run"); void p.offsetWidth; p.classList.add("run");   // restart the 8-second line
+  el.scrollIntoView({block:"center", behavior:"instant"}); tourPlace();
+  tourRO.disconnect(); tourRO.observe(el);   // the ring follows this stop's size as it grows or shrinks (a card opening, the checklist's extra fields)
+}
+const tourRO=new ResizeObserver(()=>tourPlace());
+// which stop a click on the page belongs to: the current stop first (its control and the parts it uses), then the smallest matching one
+function tourStepAt(t){
+  const parts=s=>[s.el(), ...(s.uses?s.uses():[])].filter(Boolean), has=s=>parts(s).some(e=>e.contains(t));
+  if(has(TOUR[tourAt])) return tourAt;
+  let best=-1, area=Infinity;
+  TOUR.forEach((s,n)=>{ for(const e of parts(s)) if(e.contains(t)){ const r=e.getBoundingClientRect(), a=r.width*r.height; if(a&&a<area){ area=a; best=n; } } });
+  return best;
+}
+function tourPlace(){
+  if(tourAt<0) return; const s=TOUR[tourAt], el=s.el(); if(!el) return;
+  const r=el.getBoundingClientRect(), pad=6, c=$("#tourcard"), cw=c.offsetWidth, ch=c.offsetHeight, vw=innerWidth, vh=innerHeight;
+  Object.assign($("#tourring").style,{left:r.left-pad+"px", top:r.top-pad+"px", width:r.right-r.left+pad*2+"px", height:r.bottom-r.top+pad*2+"px"});
+  let x, y;   // beside the control when there is room (right, then left), otherwise below or above it
+  if(r.right+pad+16+cw<=vw-16){ x=r.right+pad+16; y=r.top; }
+  else if(r.left-pad-16-cw>=16){ x=r.left-pad-16-cw; y=r.top; }
+  else { x=r.left; y=r.bottom+pad+16+ch<=vh-16 ? r.bottom+pad+16 : r.top-pad-16-ch; }
+  c.style.left=Math.max(16,Math.min(x,vw-cw-16))+"px"; c.style.top=Math.max(16,Math.min(y,vh-ch-16))+"px";
+}
+function startTour(){
+  $("#guide").hidden=true; closeMenu(); if(editing) closeEditor(true);
+  tourKeep={open:$$(".rail details").map(d=>d.open), y:scrollY, s:JSON.parse(JSON.stringify(S)), buyer:buyerOpen(), theme:document.documentElement.dataset.theme};
+  sandbox=new Map(); setEdit(false); setBuyer(false,false);
+  const fresh=defaults(); fresh.rep={...S.rep}; loadState(fresh);   // a blank practice flyer, same rep
+  $("#tour").hidden=false; $("#tour").classList.remove("paused"); $("#tourpause").textContent="Pause";
+  tourAt=-1; tourSeen=new Set(); tourGo(0); $("#tournext").focus();
+}
+function endTour(){
+  if(tourAt<0) return; tourAt=-1; tourRO.disconnect(); $("#tour").hidden=true; closeTodo(); $("#ask").hidden=true;
+  sandbox=null; setEdit(false); setBuyer(tourKeep.buyer,false); document.documentElement.dataset.theme=tourKeep.theme;
+  loadState(tourKeep.s); fillReps(); syncUI();   // back to what was there before the tour (a new empty flyer, or the work in progress)
+  $$(".rail details").forEach((d,n)=>d.open=tourKeep.open[n]); scrollTo(0,tourKeep.y);
+  store.set("guideSeen",true);   // they've had the walkthrough: no welcome guide next time
+  toast("Tour finished. Nothing from the practice run was kept.");
+}
+const tourPlay=()=>{ $("#tour").classList.remove("paused"); $("#tourpause").textContent="Pause"; };
+const tourHold=()=>{ if(tourAt>=0&&!$("#tour").classList.contains("paused")){ $("#tour").classList.add("paused"); $("#tourpause").textContent="Play"; } };
 
 /* ------------------------------ start ------------------------------ */
 (async function boot(){
