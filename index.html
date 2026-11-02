@@ -13,17 +13,17 @@ try{ document.documentElement.dataset.theme = JSON.parse(localStorage.getItem("w
 /* Same look as the Wolf Pack Line Chart: a control rail on the left, the letter-size flyer on the right (stacks on phones). */
 :root{
   --bg:#eef1f5; --panel:#ffffff; --fg:#0f1b2d; --muted:#5b6a7f; --line:#d5dbe4;
-  --accent:#0a2a5c; --accent-fg:#ffffff; --red:#c8102e; --sel:#c8102e; --chip:#e6ebf2; --ok:#1d7a46; --warnbg:#fff4e0; --warnfg:#7a4500;
+  --accent:#0a2a5c; --accent-fg:#ffffff; --red:#c8102e; --sel:#c8102e; --chip:#e6ebf2; --ok:#1d7a46; --part:#c99a06; --warnbg:#fff4e0; --warnfg:#7a4500;
   --display:"TaurunumW00-Tall","Arial Narrow",Impact,sans-serif;
   --body:"Azo Sans","Helvetica Neue",Arial,sans-serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0c1320; --panel:#141e2f; --fg:#e7ecf3; --muted:#93a1b5; --line:#26344b;
-  --accent:#4f86d9; --accent-fg:#06101f; --red:#ff5a6e; --sel:#ff5a6e; --chip:#1d2a40; --ok:#4fc483; --warnbg:#3a2a10; --warnfg:#ffd9a0; color-scheme:dark}}
+  --accent:#4f86d9; --accent-fg:#06101f; --red:#ff5a6e; --sel:#ff5a6e; --chip:#1d2a40; --ok:#4fc483; --part:#f2c14e; --warnbg:#3a2a10; --warnfg:#ffd9a0; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0c1320; --panel:#141e2f; --fg:#e7ecf3; --muted:#93a1b5; --line:#26344b;
-  --accent:#4f86d9; --accent-fg:#06101f; --red:#ff5a6e; --sel:#ff5a6e; --chip:#1d2a40; --ok:#4fc483; --warnbg:#3a2a10; --warnfg:#ffd9a0; color-scheme:dark}
+  --accent:#4f86d9; --accent-fg:#06101f; --red:#ff5a6e; --sel:#ff5a6e; --chip:#1d2a40; --ok:#4fc483; --part:#f2c14e; --warnbg:#3a2a10; --warnfg:#ffd9a0; color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0}
@@ -135,6 +135,8 @@ details.step+details.step::before{content:"";position:absolute;left:26px;top:-16
 details.step.done{border-color:color-mix(in srgb,var(--ok) 45%,var(--line))}
 details.step.done>summary::before{content:"✓" / "Done";background:var(--ok);border-color:var(--ok);color:#fff}
 details.step.done+details.step::before{background:var(--ok)}
+details.step.part{border-color:color-mix(in srgb,var(--part) 45%,var(--line))}
+details.step.part>summary::before{content:"–" / "Partly done";background:var(--part);border-color:var(--part);color:#1a1300}
 .row .grow{flex:1}
 /* "?" help: hover, focus or tap to read; out of the way otherwise */
 .tip{position:relative;display:inline-flex;margin-left:auto}
@@ -492,7 +494,7 @@ details.step.done+details.step::before{background:var(--ok)}
   <h3>Manual edit (only when needed)</h3>
   <ul>
     <li>Tick <b>Manual edit</b> to unlock the flyer. Drag items to move them, drag the corner handle to resize, and drag a logo’s side handles to reshape it. Arrow keys nudge.</li>
-    <li>Double-click any text on the flyer to type over it. A toolbar appears at the top of the flyer for bold, italic, underline, superscript, subscript, <b>Aa</b> (switch the selected words between UPPER, lower and Title case), color and text size. Click <b>Done</b> (or anywhere else) when finished.</li>
+    <li>Double-click any text on the flyer to type over it. A toolbar appears at the top of the flyer for bold, italic, underline, superscript, subscript, <b>Aa</b> (switch the selected words between UPPER, lower and Title case), color and text size. Click <b>Done</b> (or anywhere else) when finished. Typing the group name, price, FEVO link, deadline or rep this way also fills in its card on the left. A step turns yellow with a dash while only some of it is filled in (say, the group name but not the price) and green once all of it is.</li>
     <li><b>Add text</b> drops a new line on the flyer; its toolbar also has font, size and alignment.</li>
     <li>Add extra logos (a group’s own logo, another organization’s, or any AHL team) with <b>Add another logo</b> in the Logos card. They never replace the opponent.</li>
     <li>Unticking locks everything where you left it. Nothing resets unless you click <b>Put this item back</b> or <b>Reset all to template</b>.</li>
@@ -609,7 +611,7 @@ const CDN = {
   pdf:  ["https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js","https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"],
 };
 
-const APP_VERSION = "1.10 · Nov 2, 2026";   // shown at the bottom of the page so you can confirm GitHub is serving the newest file
+const APP_VERSION = "1.11 · Nov 2, 2026";   // shown at the bottom of the page so you can confirm GitHub is serving the newest file
 const W = 816, H = 1056;                 // 8.5 × 11 in at 96 px/in (same as the template slide)
 const NAVY = "#1F2358", RED = "#F2232A", WHITE = "#FFFFFF";
 const HEAD = "TaurunumW00-Tall", BODY = "Azo Sans";   // the template's typefaces
@@ -673,6 +675,7 @@ function defaults(){
     ov:{},       // manual-edit text changes to template items: {element: text}
     texts:[],    // text added in manual edit: {id,text,font,size,bold,italic,underline,color,align,cx,base}
     done:[],     // left-rail steps finished with Next / Done (shown green)
+    touched:[],  // flyer items filled in by typing over them in manual edit (a step with only some of its items is shown yellow)
     task:null,   // the checklist task this flyer was opened from
   };
 }
@@ -1036,7 +1039,7 @@ function drawEditOverlay(cv){
 /* ---- inline text editor: type on the flyer, toolbar at the top ---- */
 let editing=null;
 const toHex=c=>{ const m=String(c).match(/\d+(\.\d+)?/g); return m?"#"+m.slice(0,3).map(v=>(+v|0).toString(16).padStart(2,"0")).join("").toUpperCase():NAVY; };
-function editorItems(el){ const k=/^box\d$/.test(el)?"block":"el"; return layout.filter(i=>i[k]===el&&i.t==="text"); }   // box0/box1: one block of the theme night box
+function editorItems(el, L=layout){ const k=/^box\d$/.test(el)?"block":"el"; return L.filter(i=>i[k]===el&&i.t==="text"); }   // box0/box1: one block of the theme night box
 function openEditor(el){
   if(!editMode||!el) return;
   const items=editorItems(el); if(!items.length) return;
@@ -1089,6 +1092,27 @@ function boxMarkup(lines, bb){ let t=lines.map(l=>l.map(r=>{ let x=r.text; if(!x
     if(r.bold&&!bb.bold) x=`**${x}**`; if(r.underline&&!bb.underline) x=`__${x}__`; if(r.color===RED&&(bb.color||NAVY)!==RED) x=`[[${x}]]`; return x; }).join("")).join("\n");
   for(const [tok,f] of GROUP_CASES) t=t.split(f(boxGroup())).join(tok);
   return t; }
+// Manual edit -> card: wording typed over a template item fills the matching card field, and that step turns green once complete
+const CARD_KEYS=["group","price","link","dl","rep","done","touched"];
+const STEP_PARTS=[["group","price"],["link"],["box0","box1"],["deadline"],["contact","email"]];   // flyer items each left-rail step covers
+function touch(...els){ for(const el of els) if(!S.touched.includes(el)) S.touched.push(el);
+  STEP_PARTS.forEach((ps,i)=>{ if(ps.every(p=>S.touched.includes(p))&&!S.done.includes(i)) S.done.push(i); }); }
+function fillCard(el, lines){
+  const t=lines.map(l=>l.map(r=>r.text).join("")).join("\n").trim(), one=t.replace(/\s*\n\s*/g," ");
+  if(el==="group"&&one){ S.group=one; touch(el); return true; }
+  if(el==="price"){ const m=/(\d+(?:\.\d{1,2})?)/.exec(t); if(m){ S.price=m[1]; touch(el); return true; } }
+  if(el==="link"&&one&&!/^insert fevo link$/i.test(one)){ S.link=one.replace(/\s+/g,""); touch(el); return true; }
+  if(el==="deadline"){ const m=/ORDER:\s*(?:[A-Z]+\.?\s+)?([A-Z]+)\.?\s+(\d{1,2})(?:ST|ND|RD|TH)?\b(?:.*?\bBY\s+(.+))?/i.exec(one), g=parseDate(S.date);
+    const mi=m?MONS.findIndex(x=>x.slice(0,3)===m[1].slice(0,3).toUpperCase()):-1;
+    if(mi>=0&&g){ let d=new Date(g.getFullYear(),mi,+m[2]); if(d>g) d.setFullYear(d.getFullYear()-1);   // the deadline is on or before the game
+      S.dl={...S.dl,date:isoDate(d),manual:true}; const tm=m[3]&&m[3].replace(/\s+/g,"").toUpperCase();
+      if(tm&&[...$("#f-dltime").options].some(o=>o.value===tm)) S.dl.time=tm; touch(el); return true; } }
+  if(el==="contact"){ const m=/CONTACT:\s*(.+)$/i.exec(one); if(m){ const name=m[1].trim(), r=allReps().find(x=>x.name.trim().toLowerCase()===name.toLowerCase());
+    S.rep = r ? {key:r.key,name:r.name,email:r.email,phone:r.phone} : {...S.rep,key:"custom",name}; r ? touch(el,"email") : touch(el); return true; } }   // a known rep brings their email and phone
+  if(el==="email"){ const parts=one.split("|").map(x=>x.trim()), em=parts.find(x=>x.includes("@")), ph=parts.find(x=>!x.includes("@")&&/\d{3}/.test(x));
+    if(em||ph){ S.rep={...S.rep,key:"custom",email:em?em.toLowerCase():S.rep.email,phone:ph||S.rep.phone}; touch(el); return true; } }
+  return false;
+}
 function src0(items,base){ return items[0].src.map(r=>toStored(r,base)); }
 function positionEditor(){
   const d=$("#inlined"); if(!d||!editing) return;
@@ -1101,6 +1125,9 @@ function positionEditor(){
   const cx=(it.cx??W/2)*s; d.style.width=w+"px";
   d.style.left=ox+(align==="left"?cx:align==="right"?cx-w:cx-w/2)+"px";
   d.style.top=oy+((it.base??600)*s - size*s*0.92 - (lh-size*s*1.2)/2)+"px";
+  // keep the toolbar off the text being edited: above it when there is room, otherwise below it
+  const tb=$("#tbar"), et=parseFloat(d.style.top), th=tb.offsetHeight, gap=10;
+  tb.style.top=(et-th-gap>=4 ? et-th-gap : Math.min(et+d.offsetHeight+gap, $("#fit").clientHeight-th-4))+"px";
 }
 function parseEditor(d, base){
   const lines=[[]];
@@ -1120,9 +1147,16 @@ function closeEditor(commit){
   const before=snap();
   if(commit&&editing){ const lines=parseEditor(d,editing.base);
     if(editing.box){ const bb=editing.box, t=boxMarkup(lines,bb), typed=t!==t.toUpperCase();
-      if(t!==bb.text||typed!==!!bb.asTyped){ remember(JSON.stringify({box:S.box})); bb.text=t; if(typed) bb.asTyped=true; else delete bb.asTyped; syncUI(); } }
+      if(t!==bb.text||typed!==!!bb.asTyped){ remember(JSON.stringify({box:S.box,done:S.done,touched:S.touched})); bb.text=t; if(typed) bb.asTyped=true; else delete bb.asTyped; touch(editing.el); syncUI(); } }
     else if(editing.tx){ const empty=lines.every(l=>!l.some(r=>r.text.trim())); if(empty) S.texts=S.texts.filter(t=>t!==editing.tx); else { editing.tx.lines=lines; delete editing.tx.text; } }
-    else if(JSON.stringify(lines)===editing.orig) delete S.ov[editing.el]; else S.ov[editing.el]={lines}; }
+    else { const el=editing.el, old=JSON.stringify(CARD_KEYS.map(k=>S[k]));
+      if(JSON.stringify(lines)===editing.orig) delete S.ov[el]; else S.ov[el]={lines};
+      if(fillCard(el,lines)){   // the card now holds the wording; keep an override only for what the template can't show (case, styling)
+        delete S.ov[el];
+        if(JSON.stringify(src0(editorItems(el,buildLayout(A)),editing.base))!==JSON.stringify(lines)) S.ov[el]={lines};
+        syncUI(); renderRecent();
+        const was=JSON.parse(old), b=JSON.parse(before); CARD_KEYS.forEach((k,i)=>{ if(JSON.stringify(S[k])!==JSON.stringify(was[i])) b[k]=was[i]; });
+        remember(JSON.stringify(b)); d.remove(); editing=null; $("#tbar").hidden=true; editUI(); schedule(); return; } } }
   if(snap()!==before) remember(before);
   d.remove(); editing=null; $("#tbar").hidden=true; editUI(); schedule();
 }
@@ -1592,7 +1626,8 @@ function syncUI(){
   $("#repdel").hidden = !String(S.rep.key).startsWith("loc:");
   markSteps();
 }
-const markSteps=()=>$$(".rail details.step").forEach((d,i)=>d.classList.toggle("done",S.done.includes(i)));
+const markSteps=()=>$$(".rail details.step").forEach((d,i)=>{ const done=S.done.includes(i);
+  d.classList.toggle("done",done); d.classList.toggle("part",!done&&STEP_PARTS[i].some(p=>S.touched.includes(p))); });
 function applyGame(i){ const g=SCHEDULE[i]; S.game=i; S.date=g[0]; S.time=g[1]; S.opp=g[2]; if(!S.dl.manual) S.dl.date=defaultDeadline(S.date); }
 // a different flyer: nothing to undo
 function loadState(s){ closeEditor(false); S=merge(defaults(), JSON.parse(JSON.stringify(s))); sel=null; hist.length=0; $("#undo").disabled=true; syncUI(); loadExtraImgs(); editUI(); renderRecent(); resolveOpp().then(schedule); schedule(); }
