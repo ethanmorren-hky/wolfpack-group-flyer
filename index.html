@@ -363,6 +363,7 @@ details.step.part>summary::before{content:"–" / "Partly done";background:var(-
             <button class="btn small" id="selbg" type="button" hidden>Remove background</button>
           </div>
           <div class="row"><button class="btn small" id="addtext" type="button">Add text</button></div>
+          <label class="check"><input type="checkbox" id="contact2"> Two points of contact at the bottom</label>
         </div>
         <div class="row" id="adjinfo" hidden><span class="hint" id="adjtext"></span><button class="btn small" id="resetall" type="button">Reset all to template</button></div>
       </div>
@@ -495,6 +496,7 @@ details.step.part>summary::before{content:"–" / "Partly done";background:var(-
   <ul>
     <li>Tick <b>Manual edit</b> to unlock the flyer. Drag items to move them, drag the corner handle to resize, and drag a logo’s side handles to reshape it. Arrow keys nudge.</li>
     <li>Double-click any text on the flyer to type over it. A toolbar appears at the top of the flyer for bold, italic, underline, superscript, subscript, <b>Aa</b> (switch the selected words between UPPER, lower and Title case), color and text size. Click <b>Done</b> (or anywhere else) when finished. Typing the group name, price, FEVO link, deadline or rep this way also fills in its card on the left. A step turns yellow with a dash while only some of it is filled in (say, the group name but not the price) and green once all of it is.</li>
+    <li>Need a second point of contact (a coach or organizer)? Tick <b>Two points of contact at the bottom</b> and double-click the example name and email to type over them. The sales rep card is not affected.</li>
     <li><b>Add text</b> drops a new line on the flyer; its toolbar also has font, size and alignment.</li>
     <li>Add extra logos (a group’s own logo, another organization’s, or any AHL team) with <b>Add another logo</b> in the Logos card. They never replace the opponent.</li>
     <li>Unticking locks everything where you left it. Nothing resets unless you click <b>Put this item back</b> or <b>Reset all to template</b>.</li>
@@ -611,7 +613,7 @@ const CDN = {
   pdf:  ["https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js","https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"],
 };
 
-const APP_VERSION = "1.11 · Nov 2, 2026";   // shown at the bottom of the page so you can confirm GitHub is serving the newest file
+const APP_VERSION = "1.12 · Nov 2, 2026";   // shown at the bottom of the page so you can confirm GitHub is serving the newest file
 const W = 816, H = 1056;                 // 8.5 × 11 in at 96 px/in (same as the template slide)
 const NAVY = "#1F2358", RED = "#F2232A", WHITE = "#FFFFFF";
 const HEAD = "TaurunumW00-Tall", BODY = "Azo Sans";   // the template's typefaces
@@ -675,6 +677,7 @@ function defaults(){
     ov:{},       // manual-edit text changes to template items: {element: text}
     texts:[],    // text added in manual edit: {id,text,font,size,bold,italic,underline,color,align,cx,base}
     done:[],     // left-rail steps finished with Next / Done (shown green)
+    contact2:false,   // manual edit: a second point of contact above the rep's lines
     touched:[],  // flyer items filled in by typing over them in manual edit (a step with only some of its items is shown yellow)
     task:null,   // the checklist task this flyer was opened from
   };
@@ -791,14 +794,19 @@ function buildLayout(A){
   T("fine", 408.3, 812, 872.01, [{text:"** THIS OFFER IS NOT AVAILABLE AT THE HARTFORD TICKET OFFICE AT PEOPLESBANK ARENA OR ON DATE OF GAME **", fam:"body", size:13.98, bold:true, color:WHITE}], {el:"bar"});
 
   const rn=(S.rep.name||"").trim().toUpperCase()||"NAME";
-  const cb={fam:"body", size:33.33, bold:true, color:WHITE};
-  TM("contact", 407.5, 800, 938.0, 40, [[{text:"FOR MORE INFORMATION & TICKET RELATED",...cb}],[{text:`QUESTIONS CONTACT: ${rn}`,...cb}]]);
+  const two=!!S.contact2, cb={fam:"body", size:two?22:33.33, bold:true, color:WHITE}, bar={...cb, color:RED};
+  if(two){   // two points of contact: an example contact (typed over in manual edit), a red rule, then the rep
+    TM("contact2", 407.5, 800, 911, 27, [[{text:"FOR MORE INFORMATION & PERFORMANCE RELATED QUESTIONS:",...cb}],[{text:"EXAMPLE NAME",...cb},{text:"  |  ",...bar},{text:"EXAMPLE@EMAIL.COM",...cb}]]);
+    L.push({t:"line", el:"contact2", x1:40, x2:776, y:948, w:3, color:RED});
+    TM("contact", 407.5, 800, 976, 27, [[{text:"FOR TICKET RELATED QUESTIONS CONTACT:",...cb}],[{text:rn,...cb}]]);
+  } else TM("contact", 407.5, 800, 938.0, 40, [[{text:"FOR MORE INFORMATION & TICKET RELATED",...cb}],[{text:`QUESTIONS CONTACT: ${rn}`,...cb}]]);
   const em=(S.rep.email||"").trim(), ph=(S.rep.phone||"").trim();
   const er=[];
-  if(em) er.push({text:em.toUpperCase(), fam:"body", size:29.33, bold:true, color:WHITE, underline:true, link:"mailto:"+em});
-  if(em&&ph) er.push({text:" | ", fam:"body", size:29.33, bold:true, color:WHITE});
-  if(ph) er.push({text:ph, fam:"body", size:29.33, bold:true, color:WHITE});
-  if(er.length) T("email", 409.9, 800, 1027.99, er);
+  const es=two?22:29.33;
+  if(em) er.push({text:em.toUpperCase(), fam:"body", size:es, bold:true, color:WHITE, underline:true, link:"mailto:"+em});
+  if(em&&ph) er.push(two?{text:"  |  ", fam:"body", size:es, bold:true, color:RED}:{text:" | ", fam:"body", size:es, bold:true, color:WHITE});
+  if(ph) er.push({text:ph, fam:"body", size:es, bold:true, color:WHITE});
+  if(er.length) T("email", 409.9, 800, two?1030:1027.99, er);
   applyAdj(L);
   for(const it of L) if(it.el && REMOVABLE.includes(it.el) && (S.adj[it.el]||{}).hidden) it.ghost=true;   // removed in manual edit: still selectable, not drawn
   for(const t of S.texts||[]){ const base={fam:t.font,size:t.size,color:t.color||NAVY}, lh=t.size*1.2;
@@ -860,13 +868,13 @@ function layoutBox(L, groupName, {BX,BY,BW,BH}){
 }
 
 /* ------------------------------ manual edit: move / resize / added logos ------------------------------ */
-const EL_NAMES={toplogo:"Wolf Pack logo (top)",group:"Group name",date:"Date & time",wolf:"Wolf Pack logo",vs:"“vs”",opp:"Opponent logo",price:"Ticket price",instr:"Order line",link:"FEVO link",qr:"QR code",box:"Theme night box",deadline:"Deadline",bar:"Red fine-print bar",contact:"Contact lines",email:"Email & phone"};
+const EL_NAMES={toplogo:"Wolf Pack logo (top)",group:"Group name",date:"Date & time",wolf:"Wolf Pack logo",vs:"“vs”",opp:"Opponent logo",price:"Ticket price",instr:"Order line",link:"FEVO link",qr:"QR code",box:"Theme night box",deadline:"Deadline",bar:"Red fine-print bar",contact:"Contact lines",contact2:"Second contact",email:"Email & phone"};
 const REMOVABLE=Object.keys(EL_NAMES);   // any template item can be taken off the flyer ("Remove this" / Delete), and put back
 const STRETCHY=el=>el==="wolf"||el==="toplogo"||el==="opp"||String(el).startsWith("x:");   // logos can be reshaped; text keeps its proportions
 const extraImgs={};
 let rawBoxes={}, editMode=false, sel=null, drag=null, guides=null;
 // Undo for manual edit: snapshots of the edit layers (moves, removals, added logos and text), newest last
-const hist=[], snap=()=>JSON.stringify({adj:S.adj,extras:S.extras,ov:S.ov,texts:S.texts,logos:S.logos});
+const hist=[], snap=()=>JSON.stringify({adj:S.adj,extras:S.extras,ov:S.ov,texts:S.texts,logos:S.logos,contact2:S.contact2});
 function remember(s=snap()){ hist.push(s); if(hist.length>60) hist.shift(); $("#undo").disabled=false; }
 function undo(){
   const s=hist.pop(); if(!s) return; closeEditor(false); Object.assign(S,JSON.parse(s));
@@ -908,7 +916,7 @@ function loadExtraImgs(){
     const src = logoSrc(e.img);
     if(src) loadImage(src).then(i=>{ extraImgs[e.img]=i; schedule(); }).catch(()=>{}); }
 }
-const adjCount=()=>Object.keys(S.adj||{}).length+(S.extras||[]).length+Object.keys(S.ov||{}).length+(S.texts||[]).length;
+const adjCount=()=>Object.keys(S.adj||{}).length+(S.extras||[]).length+Object.keys(S.ov||{}).length+(S.texts||[]).length+(S.contact2?1:0);
 const isText=el=>!!el && (el.startsWith("t:") || layout.some(i=>i.el===el&&i.t==="text"));
 const curText=()=>sel&&sel.startsWith("t:")?S.texts.find(t=>"t:"+t.id===sel):null;
 let lastSel=undefined;
@@ -931,7 +939,7 @@ function logoTiles(){
 }
 function editUI(){
   const n=adjCount(), info=$("#selinfo");
-  $("#editctl").hidden=!editMode;
+  $("#editctl").hidden=!editMode; $("#contact2").checked=!!S.contact2;
   const label=sel ? selLabel(sel) : null;
   const gone = REMOVABLE.includes(sel) && !!(S.adj[sel]||{}).hidden, ex=sel&&sel.startsWith("x:")?S.extras.find(e=>"x:"+e.id===sel):null;
   info.textContent = sel ? `Selected: ${label}${gone?" (removed)":""}` : "Click anything on the flyer to select it.";
@@ -1783,8 +1791,10 @@ function wire(){
       if(!store.set("img."+key,d)) toast("Done, but this browser can’t remember the image after you leave.");
       extraImgs[key]=await loadImage(d); e.orig=e.img; e.img=key; }
     editUI(); schedule(); });
+  $("#contact2").addEventListener("change",e=>{ remember(); S.contact2=e.target.checked; sel=S.contact2?"contact2":null; editUI(); schedule();
+    if(S.contact2) toast("Added. Double-click the example name and email at the bottom to type over them.",4000); });
   $("#resetall").addEventListener("click",()=>{ const b=$("#resetall"); if(!b.dataset.armed){ b.dataset.armed=1; b.textContent="Click again to reset"; setTimeout(()=>{ delete b.dataset.armed; b.textContent="Reset all to template"; },3000); return; }
-    delete b.dataset.armed; b.textContent="Reset all to template"; remember(); S.adj={}; S.extras=[]; S.logos=[]; S.ov={}; S.texts=[]; sel=null; editUI(); schedule(); toast(`Back to the template layout and text. Undo (${UNDO_KEY}) if that was a mistake.`,3500); });
+    delete b.dataset.armed; b.textContent="Reset all to template"; remember(); S.adj={}; S.extras=[]; S.logos=[]; S.ov={}; S.texts=[]; S.contact2=false; sel=null; editUI(); schedule(); toast(`Back to the template layout and text. Undo (${UNDO_KEY}) if that was a mistake.`,3500); });
   $("#xahl").innerHTML=`<option value="">or an AHL team…</option>`+Object.keys(ASSETS.logos).map(k=>`<option value="${k}">${esc(k.split("-").map(w=>w[0].toUpperCase()+w.slice(1)).join(" ").replace("Icehogs","IceHogs").replace("Wilkes Barre Scranton","Wilkes-Barre/Scranton"))}</option>`).join("");
   $("#xahl").addEventListener("change",async e=>{ const k=e.target.value, name=e.target.options[e.target.selectedIndex]?.text||k; e.target.value=""; if(!k) return; addExtra(await loadImage(ASSETS.logos[k]), name, "ahl:"+k); });
   $("#recent").addEventListener("click",e=>{
