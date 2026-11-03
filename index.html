@@ -209,6 +209,10 @@ details.step.part>summary::before{content:"–" / "Partly done";background:var(-
 .modal .box{background:var(--panel);border-radius:10px;padding:14px;max-width:min(560px,100%);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:10px}
 .guide .box{max-width:min(640px,100%);gap:12px;padding:18px 20px}
 .guide h2{font-family:var(--display);font-size:30px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:0;line-height:1}
+.guide .gmore>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px}
+.guide .gmore>summary::-webkit-details-marker{display:none}
+.guide .gmore>summary::after{content:"▸ show";font-size:12px;color:var(--muted);margin-top:6px}
+.guide .gmore[open]>summary::after{content:"▾ hide"}
 .guide h3{font-family:var(--display);font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin:6px 0 0;color:var(--red)}
 .guide p,.guide li{font-size:13.5px;line-height:1.5;margin:0}
 .guide ol,.guide ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
@@ -304,7 +308,7 @@ details.step.part>summary::before{content:"–" / "Partly done";background:var(-
     <details class="card step">
       <summary><h2>Theme night box</h2><span class="tip"><button type="button" class="q" aria-label="Help" aria-describedby="t-box">?</button><span class="tipbox" role="tooltip" id="t-box"><code>{GROUP}</code> drops in the group name. Press Enter for a new line. Text shrinks if it outgrows the box.</span></span></summary>
       <div class="body">
-        <p class="warn" id="boxgone" hidden>This box is removed from the flyer. To bring it back, select its spot in Manual edit and click <b>Put this item back</b>.</p>
+        <p class="warn" id="boxgone" hidden>This box is removed from the flyer. To bring it back, click it under <b>Removed</b> in the Manual edit card.</p>
         <div class="field"><label for="f-top">Top line</label><textarea id="f-top" data-k="box.top.text" rows="2"></textarea></div>
         <div class="fmt" data-fmtbar="top" role="group" aria-label="Top line formatting"></div>
         <div class="field"><label for="f-bot">Promo / theme night info</label><textarea id="f-bot" data-k="box.bot.text" rows="2"></textarea></div>
@@ -337,6 +341,8 @@ details.step.part>summary::before{content:"–" / "Partly done";background:var(-
       <summary><h2>Sales rep</h2><span class="tip"><button type="button" class="q" aria-label="Help" aria-describedby="t-rep">?</button><span class="tipbox" role="tooltip" id="t-rep">Fills the contact name, email and phone at the bottom of the flyer. Recent flyers are filed under this rep.</span></span></summary>
       <div class="body">
         <div class="field"><label for="rep">Rep</label><select id="rep"></select></div>
+        <p class="hint" id="repline"></p>
+        <div id="repfields" style="display:flex;flex-direction:column;gap:inherit">
         <div class="field"><label for="f-rname">Name</label><input type="text" id="f-rname" data-k="rep.name" autocomplete="off"></div>
         <div class="grid2">
           <div class="field"><label for="f-remail">Email</label><input type="email" id="f-remail" data-k="rep.email" autocomplete="off"></div>
@@ -345,8 +351,10 @@ details.step.part>summary::before{content:"–" / "Partly done";background:var(-
         <div class="row">
           <button class="btn small" id="repsave" type="button">Remember this rep</button>
           <button class="btn small" id="repdel" type="button" hidden>Forget this rep</button>
-          <span class="grow"></span><button class="btn small primary" type="button" data-next>Done</button>
         </div>
+        </div>
+        <label class="check"><input type="checkbox" id="repme"> This is me: start new flyers with this rep and show their checklist</label>
+        <div class="row"><button class="linkbtn" id="repedit" type="button">Edit details</button><span class="grow"></span><button class="btn small primary" type="button" data-next>Done</button></div>
       </div>
     </details>
 
@@ -362,7 +370,10 @@ details.step.part>summary::before{content:"–" / "Partly done";background:var(-
             <button class="btn small" id="selremove" type="button" hidden>Remove this</button>
             <button class="btn small" id="selbg" type="button" hidden>Remove background</button>
           </div>
+          <div class="row" id="rotrow" hidden><label for="rot" class="hint">Rotate</label><input id="rot" type="number" min="-180" max="180" step="1" style="width:68px" aria-label="Rotation in degrees"><span class="hint">°</span>
+            <button class="btn small" id="rotl" type="button" title="Turn 90° to the left">⟲ 90°</button><button class="btn small" id="rotr" type="button" title="Turn 90° to the right">⟳ 90°</button></div>
           <div class="row"><button class="btn small" id="addtext" type="button">Add text</button></div>
+          <div class="row" id="gonerow" hidden><span class="hint">Removed (click to put back):</span><span id="gonelist" style="display:contents"></span></div>
           <label class="check"><input type="checkbox" id="contact2"> Two points of contact at the bottom</label>
         </div>
         <div class="row" id="adjinfo" hidden><span class="hint" id="adjtext"></span><button class="btn small" id="resetall" type="button">Reset all to template</button></div>
@@ -376,7 +387,7 @@ details.step.part>summary::before{content:"–" / "Partly done";background:var(-
           <div class="pv" id="opppv"></div>
           <p class="hint" id="oppmsg" style="flex:1"></p>
         </div>
-        <div class="field"><span class="lbl">Added logos</span><div class="tiles" id="xtiles"></div></div>
+        <div class="field" id="xtilesf"><span class="lbl">Added logos</span><div class="tiles" id="xtiles"></div></div>
         <div class="field"><label for="xahl">Add another logo</label>
           <div class="row" style="flex-wrap:nowrap">
             <label class="btn small">Upload a logo<input type="file" class="xfile" accept="image/*" hidden></label>
@@ -392,8 +403,8 @@ details.step.part>summary::before{content:"–" / "Partly done";background:var(-
         <span class="lbl" id="recentwho"></span>
         <div class="flist" id="recent"></div>
         <div class="row">
-          <button class="btn small" id="savejson" type="button">Save setup file</button>
-          <label class="btn small">Open setup file<input type="file" id="openjson" accept=".json,application/json" hidden></label>
+          <button class="btn small" id="savejson" type="button" title="Keep this flyer as a file, to open on another computer or send to someone">Save this flyer as a file</button>
+          <label class="btn small">Open a flyer file<input type="file" id="openjson" accept=".json,application/json" hidden></label>
         </div>
       </div>
     </details>
@@ -492,15 +503,18 @@ details.step.part>summary::before{content:"–" / "Partly done";background:var(-
     <li><b>Check the deadline.</b> It defaults to the Friday about two weeks before the game; nudge it with the buttons or pick a date.</li>
     <li><b>Pick the rep.</b> Their name, email and phone fill the bottom.</li>
   </ol>
-  <h3>Manual edit (only when needed)</h3>
+  <details class="gmore"><summary><h3>Changing the layout (manual edit, only when needed)</h3></summary>
   <ul>
     <li>Tick <b>Manual edit</b> to unlock the flyer. Drag items to move them, drag the corner handle to resize, and drag a logo’s side handles to reshape it. Arrow keys nudge.</li>
     <li>Double-click any text on the flyer to type over it. A toolbar appears at the top of the flyer for bold, italic, underline, superscript, subscript, <b>Aa</b> (switch the selected words between UPPER, lower and Title case), color and text size. Click <b>Done</b> (or anywhere else) when finished. Typing the group name, price, FEVO link, deadline or rep this way also fills in its card on the left. A step turns yellow with a dash while only some of it is filled in (say, the group name but not the price) and green once all of it is.</li>
     <li>Need a second point of contact (a coach or organizer)? Tick <b>Two points of contact at the bottom</b> and double-click the example name and email to type over them. The sales rep card is not affected.</li>
-    <li><b>Add text</b> drops a new line on the flyer; its toolbar also has font, size and alignment.</li>
+    <li><b>Add text</b> drops a new text box on the flyer; its toolbar also has font, size and alignment. Drag the box's side handle to make it wider or narrower: words wrap inside it and never run off the flyer.</li>
+    <li>To select several things at once, drag a box across empty space on the flyer (or hold Shift and drag anywhere). Everything fully inside is selected: <b>Delete</b> removes them all, and dragging or the arrow keys move them together.</li>
+    <li>Select anything and use <b>Rotate</b> (type an angle, or ⟲/⟳ 90°) to turn it. Removed items disappear completely and are listed under <b>Removed</b> in the Manual edit card, where one click puts them back.</li>
     <li>Add extra logos (a group’s own logo, another organization’s, or any AHL team) with <b>Add another logo</b> in the Logos card. They never replace the opponent.</li>
     <li>Unticking locks everything where you left it. Nothing resets unless you click <b>Put this item back</b> or <b>Reset all to template</b>.</li>
   </ul>
+  </details>
   <h3>QR test run</h3>
   <ul>
     <li>Click <b>QR test run</b> (next to Reset) to show the flyer’s QR code on a phone to the right. Scan it with your own phone’s camera and make sure it opens the right FEVO page before the flyer goes out. <b>Open the link on this computer</b> opens it in a small window too.</li>
@@ -613,7 +627,7 @@ const CDN = {
   pdf:  ["https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js","https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"],
 };
 
-const APP_VERSION = "1.12 · Nov 2, 2026";   // shown at the bottom of the page so you can confirm GitHub is serving the newest file
+const APP_VERSION = "1.14 · Nov 3, 2026";   // shown at the bottom of the page so you can confirm GitHub is serving the newest file
 const W = 816, H = 1056;                 // 8.5 × 11 in at 96 px/in (same as the template slide)
 const NAVY = "#1F2358", RED = "#F2232A", WHITE = "#FFFFFF";
 const HEAD = "TaurunumW00-Tall", BODY = "Azo Sans";   // the template's typefaces
@@ -663,14 +677,15 @@ async function lib(name, global){ if(window[global]) return window[global]; libP
 /* ------------------------------ state ------------------------------ */
 function nextGame(){ const t=isoDate(new Date()); const i=SCHEDULE.findIndex(g=>g[0]>=t); return i<0?SCHEDULE.length-1:i; }
 const fmtDefault = () => ({ size:18, bold:true, italic:false, underline:false, color:NAVY, align:"center" });
+const myRep=()=>store.get("myrep",null);   // the rep who uses this browser ("This is me" in the Sales rep card)
 function defaults(){
-  const gi=nextGame(), g=SCHEDULE[gi], r=REPS[0]||{name:"",email:"",phone:""};
+  const gi=nextGame(), g=SCHEDULE[gi], r=myRep()||REPS[0]||{name:"",email:"",phone:""};
   return {
     v:1, game:gi, date:g[0], time:g[1], opp:g[2],
     group:"", price:"24.99", link:"", qrOn:true,
     box:{ divider:true, top:{ text:DEF_TOP, ...fmtDefault() }, bot:{ text:DEF_BOT, ...fmtDefault() } },
     dl:{ date:defaultDeadline(g[0]), time:"5PM", manual:false },
-    rep:{ key:"cfg:0", name:r.name, email:r.email, phone:r.phone },
+    rep:{ key:r.key||"cfg:0", name:r.name, email:r.email, phone:r.phone },
     adj:{},      // manual-edit moves/resizes, per flyer element: {dx,dy,sx,sy}
     extras:[],   // logos added in manual edit: {id,img,name,x,y,w,h}
     logos:[],    // every logo added to this flyer, kept as tiles in the Logos card so it can be added again: {img,name}
@@ -808,10 +823,15 @@ function buildLayout(A){
   if(ph) er.push({text:ph, fam:"body", size:es, bold:true, color:WHITE});
   if(er.length) T("email", 409.9, 800, two?1030:1027.99, er);
   applyAdj(L);
-  for(const it of L) if(it.el && REMOVABLE.includes(it.el) && (S.adj[it.el]||{}).hidden) it.ghost=true;   // removed in manual edit: still selectable, not drawn
+  for(const it of L) if(it.el && REMOVABLE.includes(it.el) && (S.adj[it.el]||{}).hidden) it.ghost=true;   // removed in manual edit: not drawn, listed under Removed
+  pageWrap(L);
   for(const t of S.texts||[]){ const base={fam:t.font,size:t.size,color:t.color||NAVY}, lh=t.size*1.2;
-    textLines(t).forEach((line,i)=>L.push({t:"text", el:"t:"+t.id, block:"t:"+t.id, cx:t.cx, w:780, align:t.align, base:t.base+i*lh, lh, runs:fitRuns(fromStored(line,base),780)})); }
+    const bw=t.rot ? (t.w||780) : Math.min(t.w||780, pageRoom(t.cx,t.align)); let n=0;
+    for(const line of textLines(t)){ const runs=fromStored(line,base);
+      for(const part of lineWidth(runs)>bw ? wrapRuns(runs,bw) : [runs]) L.push({t:"text", el:"t:"+t.id, block:"t:"+t.id, cx:t.cx, w:bw, boxed:true, align:t.align, base:t.base+(n++)*lh, lh, runs:fitRuns(part,bw)}); } }
   for(const e of S.extras||[]){ const im=extraImgs[e.img]; if(im) L.push({t:"img", el:"x:"+e.id, img:im, x:e.x, y:e.y, w:e.w, h:e.h, name:e.name||"Logo"}); }
+  const RB=boxesOf(L);   // rotation turns a whole item about the centre of its box
+  for(const it of L){ const r=rotOf(it.el), b=r&&RB[it.el]; if(b){ it.rot=r; it.rc=[b.x+b.w/2,b.y+b.h/2]; } }
   return L;
 }
 let bgCleanC=null;
@@ -872,12 +892,12 @@ const EL_NAMES={toplogo:"Wolf Pack logo (top)",group:"Group name",date:"Date & t
 const REMOVABLE=Object.keys(EL_NAMES);   // any template item can be taken off the flyer ("Remove this" / Delete), and put back
 const STRETCHY=el=>el==="wolf"||el==="toplogo"||el==="opp"||String(el).startsWith("x:");   // logos can be reshaped; text keeps its proportions
 const extraImgs={};
-let rawBoxes={}, editMode=false, sel=null, drag=null, guides=null;
+let rawBoxes={}, editMode=false, sel=null, drag=null, guides=null, multi=[], marq=null;   // multi: several items picked with a drag box
 // Undo for manual edit: snapshots of the edit layers (moves, removals, added logos and text), newest last
 const hist=[], snap=()=>JSON.stringify({adj:S.adj,extras:S.extras,ov:S.ov,texts:S.texts,logos:S.logos,contact2:S.contact2});
 function remember(s=snap()){ hist.push(s); if(hist.length>60) hist.shift(); $("#undo").disabled=false; }
 function undo(){
-  const s=hist.pop(); if(!s) return; closeEditor(false); Object.assign(S,JSON.parse(s));
+  const s=hist.pop(); if(!s) return; closeEditor(false); multi=[]; Object.assign(S,JSON.parse(s));
   if(sel&&((sel.startsWith("x:")&&!S.extras.some(e=>"x:"+e.id===sel))||(sel.startsWith("t:")&&!S.texts.some(t=>"t:"+t.id===sel)))) sel=null;
   $("#undo").disabled=!hist.length; loadExtraImgs(); syncUI(); editUI(); schedule(); toast("Undone.");
 }
@@ -893,10 +913,27 @@ function guideLines(skip){
 }
 function snapTo(lines, edges, thr){ let best=null; for(const l of lines) for(const e of edges){ const d=l.v-e; if(Math.abs(d)<thr&&(!best||Math.abs(d)<Math.abs(best.d))) best={d,l}; } return best; }
 function itemBox(it){
+  if(it.t==="text"&&it.boxed){ const m=Math.max(1,...it.runs.filter(r=>!r.sup&&!r.sub).map(r=>r.size),it.lh/1.2), cap=it.runs.some(r=>r.fam==="head")?0.8:0.74, x=it.align==="left"?it.cx:it.align==="right"?it.cx-it.w:it.cx-it.w/2; return [x,it.base-m*cap,x+it.w,it.base+m*0.16]; }   // added text: the whole box width
   if(it.t==="text"){ const tw=lineWidth(it.runs), x=lineStartX(it,tw), m=Math.max(1,...it.runs.filter(r=>!r.sup&&!r.sub).map(r=>r.size)), cap=it.runs.some(r=>r.fam==="head")?0.8:0.74; return [x,it.base-m*cap,x+tw,it.base+m*0.16]; }
   if(it.t==="line") return [it.x1,it.y-it.w/2,it.x2,it.y+it.w/2];
   return [it.x,it.y,it.x+it.w,it.y+it.h];
 }
+const pageRoom=(cx,align,m=12)=>Math.max(40, align==="left"?W-m-cx : align==="right"?cx-m : 2*Math.min(cx-m,W-m-cx));   // width left inside the flyer, m from each edge
+// template text that has grown past the flyer's edge wraps onto more lines (pushing the rest of that item down) instead of running off the page
+function pageWrap(L){
+  for(let i=0;i<L.length;i++){ const it=L[i]; if(it.t!=="text"||it.boxed||/^box\d$/.test(it.block)||rotOf(it.el)) continue;
+    const room=pageRoom(it.cx,it.align,0); if(lineWidth(it.runs)<=room+0.5) continue;   // template lines run edge to edge, so only the page edge counts
+    const parts=wrapRuns(it.runs,room).filter(r=>r.length).map(r=>fitRuns(r,room)); if(parts.length<2){ it.runs=fitRuns(it.runs,room); continue; }
+    const lh=it.lh||Math.max(...it.runs.map(r=>r.size))*1.2, more=(parts.length-1)*lh;
+    for(let j=i+1;j<L.length;j++) if(L[j].el===it.el&&L[j].t==="text") L[j].base+=more;
+    it.runs=parts[0]; const add=parts.slice(1).map((r,j)=>({...it,runs:r,base:it.base+(j+1)*lh})); L.splice(i+1,0,...add); i+=add.length; }
+}
+const rotOf=el=>!el?0 : el.startsWith("x:")?((S.extras||[]).find(e=>"x:"+e.id===el)||{}).rot||0 : el.startsWith("t:")?((S.texts||[]).find(t=>"t:"+t.id===el)||{}).rot||0 : (S.adj[el]||{}).rot||0;
+const isGone=el=>REMOVABLE.includes(el)&&!!(S.adj[el]||{}).hidden;
+// a page point in an item's own (unrotated) frame
+function toLocal(k,p,b){ const r=rotOf(k); if(!r||!b) return p; const a=-r*Math.PI/180, cx=b.x+b.w/2, cy=b.y+b.h/2, dx=p.x-cx, dy=p.y-cy;
+  return {...p, x:cx+dx*Math.cos(a)-dy*Math.sin(a), y:cy+dx*Math.sin(a)+dy*Math.cos(a)}; }
+function withRot(c,k,b,f){ const r=rotOf(k); if(r){ c.save(); const cx=b.x+b.w/2, cy=b.y+b.h/2; c.translate(cx,cy); c.rotate(r*Math.PI/180); c.translate(-cx,-cy); } f(); if(r) c.restore(); }
 function boxesOf(L){ const B={}; for(const it of L){ if(!it.el) continue; const [a,b,c,d]=itemBox(it), o=B[it.el]; B[it.el]=o?[Math.min(o[0],a),Math.min(o[1],b),Math.max(o[2],c),Math.max(o[3],d)]:[a,b,c,d]; }
   for(const k in B){ const [a,b,c,d]=B[k]; B[k]={x:a,y:b,w:c-a,h:d-b}; } return B; }
 function applyAdj(L){
@@ -922,7 +959,7 @@ const curText=()=>sel&&sel.startsWith("t:")?S.texts.find(t=>"t:"+t.id===sel):nul
 let lastSel=undefined;
 function setEdit(on){
   if(!on) closeEditor(true);
-  editMode=!!on; if(!editMode){ sel=null; drag=null; } else $("#editcard").open=true;
+  editMode=!!on; if(!editMode){ sel=null; drag=null; multi=[]; marq=null; } else $("#editcard").open=true;
   $$(".editmode").forEach(c=>c.checked=editMode);
   $("#preview").style.touchAction = editMode ? "none" : "";
   $("#preview").style.cursor = editMode ? "default" : "";
@@ -934,17 +971,22 @@ const logoLib=()=>{ const out=[]; for(const l of [...(S.logos||[]), ...S.extras.
 function logoTiles(){
   const lib=logoLib(), on=l=>S.extras.some(e=>(e.orig||e.img)===l.img);
   const el=$("#xtiles"), sig=lib.map(l=>l.img+(extraImgs[l.img]?1:0)+(on(l)?1:0)).join(); if(el.dataset.sig===sig) return; el.dataset.sig=sig;
-  el.innerHTML = lib.map(l=>{ const im=extraImgs[l.img]; return `<button type="button" class="pv tile" data-xadd="${esc(l.img)}" aria-pressed="${on(l)}" title="Add ${esc(l.name||"this logo")} to the flyer" aria-label="Add ${esc(l.name||"this logo")} to the flyer">${im?`<img alt="" src="${im.src}">`:""}</button>`; }).join("")
-    + `<label class="pv tile add" title="Upload another logo"><span aria-hidden="true">+</span><span class="sr">Upload another logo</span><input type="file" class="xfile" accept="image/*" hidden></label>`;
+  $("#xtilesf").hidden=!lib.length;
+  el.innerHTML = lib.map(l=>{ const im=extraImgs[l.img]; return `<button type="button" class="pv tile" data-xadd="${esc(l.img)}" aria-pressed="${on(l)}" title="Add ${esc(l.name||"this logo")} to the flyer" aria-label="Add ${esc(l.name||"this logo")} to the flyer">${im?`<img alt="" src="${im.src}">`:""}</button>`; }).join("");
 }
 function editUI(){
   const n=adjCount(), info=$("#selinfo");
   $("#editctl").hidden=!editMode; $("#contact2").checked=!!S.contact2;
+  $("#rotrow").hidden=!sel||isGone(sel); if(sel&&document.activeElement!==$("#rot")) $("#rot").value=Math.round(rotOf(sel));
+  const removed=REMOVABLE.filter(isGone); $("#gonerow").hidden=!removed.length;
+  $("#gonelist").innerHTML=removed.map(k=>`<button class="btn small" type="button" data-putback="${k}">↩ ${esc(EL_NAMES[k])}</button>`).join("");
   const label=sel ? selLabel(sel) : null;
   const gone = REMOVABLE.includes(sel) && !!(S.adj[sel]||{}).hidden, ex=sel&&sel.startsWith("x:")?S.extras.find(e=>"x:"+e.id===sel):null;
-  info.textContent = sel ? `Selected: ${label}${gone?" (removed)":""}` : "Click anything on the flyer to select it.";
+  info.textContent = multi.length ? `${multi.length} items selected. Delete removes them; drag or use the arrow keys to move them together.`
+    : sel ? `Selected: ${label}${gone?" (removed)":""}` : "Click anything on the flyer to select it, or drag across empty space to select several.";
   $("#selreset").hidden = !sel || /^[xt]:/.test(sel) || !(S.adj[sel]||S.ov[sel]!=null);
-  $("#selremove").hidden = !sel || !(/^[xt]:/.test(sel) || (REMOVABLE.includes(sel)&&!gone));
+  $("#selremove").hidden = !multi.length && (!sel || !(/^[xt]:/.test(sel) || (REMOVABLE.includes(sel)&&!gone)));
+  $("#selremove").textContent = multi.length ? `Remove these ${multi.length}` : "Remove this";
   $("#selbg").hidden = !ex || builtIn(ex.img);   // uploaded logos only; the built-in logos have no background
   if(ex) $("#selbg").textContent = ex.orig ? "Put background back" : "Remove background";
   const ai=$("#adjinfo"); ai.hidden = n===0;
@@ -952,12 +994,13 @@ function editUI(){
 }
 function pagePt(e){ const r=$("#preview").getBoundingClientRect(); return {x:(e.clientX-r.left)*W/r.width, y:(e.clientY-r.top)*H/r.height, k:W/r.width}; }
 function curBoxes(){ return boxesOf(layout); }
-function handlesFor(el,b){ const h=[["c",b.x+b.w,b.y+b.h]]; if(STRETCHY(el)){ h.push(["w",b.x+b.w,b.y+b.h/2],["h",b.x+b.w/2,b.y+b.h]); } return h; }
+function handlesFor(el,b){ const h=[["c",b.x+b.w,b.y+b.h]]; if(el.startsWith("t:")) h.push(["w",b.x+b.w,b.y+b.h/2]);   // added text: drag the side to set the box width
+  if(STRETCHY(el)){ h.push(["w",b.x+b.w,b.y+b.h/2],["h",b.x+b.w/2,b.y+b.h]); } return h; }
 function hitTest(p){
   const B=curBoxes();
-  if(sel&&B[sel]) for(const [m,x,y] of handlesFor(sel,B[sel])) if(Math.abs(p.x-x)<=9*p.k&&Math.abs(p.y-y)<=9*p.k) return {el:sel,mode:m};
-  const order=[...new Set(layout.filter(i=>i.el).map(i=>i.el))].reverse();
-  const pad=3*p.k, hits=order.filter(k=>{ const b=B[k]; return p.x>=b.x-pad&&p.x<=b.x+b.w+pad&&p.y>=b.y-pad&&p.y<=b.y+b.h+pad; });
+  if(sel&&B[sel]&&!isGone(sel)){ const q=toLocal(sel,p,B[sel]); for(const [m,x,y] of handlesFor(sel,B[sel])) if(Math.abs(q.x-x)<=9*p.k&&Math.abs(q.y-y)<=9*p.k) return {el:sel,mode:m}; }
+  const order=[...new Set(layout.filter(i=>i.el).map(i=>i.el))].filter(k=>!isGone(k)).reverse();
+  const pad=3*p.k, hits=order.filter(k=>{ const b=B[k], q=toLocal(k,p,b); return q.x>=b.x-pad&&q.x<=b.x+b.w+pad&&q.y>=b.y-pad&&q.y<=b.y+b.h+pad; });
   if(!hits.length) return null;
   hits.sort((a,b)=>(B[a].w*B[a].h)-(B[b].w*B[b].h));   // smallest wins when items overlap
   return {el:hits[0],mode:"move"};
@@ -969,7 +1012,9 @@ function onDown(e){
   if(document.activeElement && document.activeElement!==document.body) document.activeElement.blur();   // keys now go to the flyer (Delete, arrows, undo)
   const p=pagePt(e), h=hitTest(p);
   downInfo={el:h&&h.el, wasSel:!!h&&h.el===sel&&h.mode==="move", p};
-  if(!h){ sel=null; editUI(); schedule(); return; }
+  if(h&&multi.includes(h.el)&&!e.shiftKey){ drag={mode:"multi",p0:p,a0s:multi.map(k=>[k,posOf(k)]),before:snap()}; $("#preview").setPointerCapture(e.pointerId); e.preventDefault(); return; }
+  if(!h||e.shiftKey){ sel=null; multi=[]; marq={a:p,b:p}; $("#preview").setPointerCapture(e.pointerId); e.preventDefault(); editUI(); schedule(); return; }
+  multi=[];
   sel=h.el; const B=curBoxes();
   const ex=sel.startsWith("x:")?S.extras.find(x=>"x:"+x.id===sel):null, tx=curText();
   drag={mode:h.mode,p0:p,b0:B[sel],a0:ex?{...ex}:tx?{...tx}:{dx:0,dy:0,sx:1,sy:1,...(S.adj[sel]||{})},ex,tx,before:snap(),lines:guideLines(sel)};
@@ -979,6 +1024,8 @@ function onDown(e){
 function onMove(e){
   if(!editMode) return;
   const p=pagePt(e);
+  if(marq){ marq.b=p; schedule(); return; }
+  if(drag&&drag.mode==="multi"){ if(!drag.saved){ remember(drag.before); drag.saved=true; } for(const [k,a0] of drag.a0s) moveTo(k,a0,p.x-drag.p0.x,p.y-drag.p0.y); schedule(); return; }
   if(!drag){ const h=hitTest(p); $("#preview").style.cursor = !h?"default":h.mode==="move"?"move":h.mode==="c"?"nwse-resize":h.mode==="w"?"ew-resize":"ns-resize"; return; }
   let dx=p.x-drag.p0.x, dy=p.y-drag.p0.y; const {b0,a0,ex,tx}=drag; guides=null;
   if(!drag.saved){ remember(drag.before); drag.saved=true; }
@@ -989,10 +1036,12 @@ function onMove(e){
     if(gy){ dy+=gy.d; guides.y.push(gy.l.v); }
     if(ex){ ex.x=a0.x+dx; ex.y=a0.y+dy; } else if(tx){ tx.cx=a0.cx+dx; tx.base=a0.base+dy; } else S.adj[sel]={...a0,dx:a0.dx+dx,dy:a0.dy+dy};
   } else {
+    const r=rotOf(sel)*Math.PI/180; if(r) [dx,dy]=[dx*Math.cos(r)+dy*Math.sin(r), -dx*Math.sin(r)+dy*Math.cos(r)];   // drag along the item's own sides
     let rx=Math.max(0.15,(b0.w+dx)/b0.w), ry=Math.max(0.15,(b0.h+dy)/b0.h);
     if(drag.mode==="c"){ ry=rx; } else if(drag.mode==="w") ry=1; else rx=1;
     if(ex){ ex.w=a0.w*rx; ex.h=a0.h*ry; }
-    else if(tx){ tx.size=Math.max(6,a0.size*rx); const nw=b0.w*rx, cap=tx.font==="head"?0.8:0.74;
+    else if(tx&&drag.mode==="w"){ const nw=Math.max(40,b0.w*rx); tx.w=nw; tx.cx = tx.align==="left"?b0.x : tx.align==="right"?b0.x+nw : b0.x+nw/2; }
+    else if(tx){ tx.size=Math.max(6,a0.size*rx); tx.w=(a0.w||780)*rx; const nw=b0.w*rx, cap=tx.font==="head"?0.8:0.74;
       tx.cx = tx.align==="left"?b0.x : tx.align==="right"?b0.x+nw : b0.x+nw/2; tx.base=b0.y+tx.size*cap; }
     else { const rb=rawBoxes[sel], sx=a0.sx*rx, sy=a0.sy*ry;
       S.adj[sel]={...a0, sx, sy, dx:a0.dx-rb.w/2*(a0.sx-sx), dy:a0.dy-rb.h/2*(a0.sy-sy)}; }
@@ -1000,6 +1049,11 @@ function onMove(e){
   schedule();
 }
 function onUp(e){
+  if(marq){ const x0=Math.min(marq.a.x,marq.b.x), x1=Math.max(marq.a.x,marq.b.x), y0=Math.min(marq.a.y,marq.b.y), y1=Math.max(marq.a.y,marq.b.y), B=curBoxes();
+    // items wholly inside the box are picked, like PowerPoint
+    if(x1-x0>4||y1-y0>4) multi=Object.keys(B).filter(k=>!isGone(k)&&B[k].x>=x0&&B[k].y>=y0&&B[k].x+B[k].w<=x1&&B[k].y+B[k].h<=y1);
+    if(multi.length===1){ sel=multi[0]; multi=[]; }
+    marq=null; downInfo=null; editUI(); schedule(); return; }
   const moved = drag && downInfo && e && Math.hypot(pagePt(e).x-downInfo.p.x, pagePt(e).y-downInfo.p.y) > 2;
   if(drag){ if(drag.saved&&snap()===drag.before){ hist.pop(); $("#undo").disabled=!hist.length; }   // a click, not a change
     drag=null; guides=null; editUI(); schedule(); }
@@ -1030,16 +1084,21 @@ async function pasteClip(){
   editUI(); schedule(); toast("Pasted. Drag it into place.");
 }
 let lastNudge=0;
-function nudge(dx,dy){ if(!sel) return; if(Date.now()-lastNudge>800) remember(); lastNudge=Date.now();   // a run of arrow presses undoes as one step
-  const ex=sel.startsWith("x:")?S.extras.find(x=>"x:"+x.id===sel):null, tx=curText();
-  if(ex){ ex.x+=dx; ex.y+=dy; } else if(tx){ tx.cx+=dx; tx.base+=dy; } else { const a={dx:0,dy:0,sx:1,...(S.adj[sel]||{})}; a.dx+=dx; a.dy+=dy; S.adj[sel]=a; } editUI(); schedule(); }
+const objOf=k=>k.startsWith("x:")?S.extras.find(x=>"x:"+x.id===k):k.startsWith("t:")?S.texts.find(t=>"t:"+t.id===k):null;
+const posOf=k=>{ const o=objOf(k); return o?{...o}:{dx:0,dy:0,sx:1,sy:1,...(S.adj[k]||{})}; };
+function moveTo(k,a0,dx,dy){ const o=objOf(k);
+  if(k.startsWith("x:")){ o.x=a0.x+dx; o.y=a0.y+dy; } else if(o){ o.cx=a0.cx+dx; o.base=a0.base+dy; } else S.adj[k]={...a0,dx:a0.dx+dx,dy:a0.dy+dy}; }
+function nudge(dx,dy){ const ks=multi.length?multi:sel?[sel]:[]; if(!ks.length) return; if(Date.now()-lastNudge>800) remember(); lastNudge=Date.now();   // a run of arrow presses undoes as one step
+  for(const k of ks) moveTo(k,posOf(k),dx,dy); editUI(); schedule(); }
 function drawEditOverlay(cv){
   if(!editMode) return;
   const c=cv.getContext("2d"), s=cv.width/W, B=curBoxes(), px=1/s*(window.devicePixelRatio||1);
   c.setTransform(s,0,0,s,0,0);
-  for(const k in B){ if(editing&&k===editing.el) continue; const b=B[k]; c.strokeStyle= k===sel?"#2f6fed":"rgba(47,111,237,.55)"; c.lineWidth=(k===sel?2:1)*px; c.setLineDash(k===sel?[]:[4*px,3*px]); c.strokeRect(b.x,b.y,b.w,b.h); }
-  c.setLineDash([]);
-  if(sel&&B[sel]&&!editing) for(const [,x,y] of handlesFor(sel,B[sel])){ const r=5*px; c.fillStyle="#fff"; c.strokeStyle="#2f6fed"; c.lineWidth=1.5*px; c.fillRect(x-r,y-r,2*r,2*r); c.strokeRect(x-r,y-r,2*r,2*r); }
+  for(const k in B){ if((editing&&k===editing.el)||isGone(k)) continue; const b=B[k], on=k===sel||multi.includes(k);
+    withRot(c,k,b,()=>{ c.strokeStyle= on?"#2f6fed":"rgba(47,111,237,.55)"; c.lineWidth=(on?2:1)*px; c.setLineDash(on?[]:[4*px,3*px]); c.strokeRect(b.x,b.y,b.w,b.h); c.setLineDash([]);
+      if(k===sel&&!editing) for(const [,x,y] of handlesFor(sel,b)){ const r=5*px; c.fillStyle="#fff"; c.strokeStyle="#2f6fed"; c.lineWidth=1.5*px; c.fillRect(x-r,y-r,2*r,2*r); c.strokeRect(x-r,y-r,2*r,2*r); } }); }
+  if(marq){ const x=Math.min(marq.a.x,marq.b.x), y=Math.min(marq.a.y,marq.b.y), w=Math.abs(marq.b.x-marq.a.x), h=Math.abs(marq.b.y-marq.a.y);
+    c.fillStyle="rgba(47,111,237,.12)"; c.fillRect(x,y,w,h); c.strokeStyle="#2f6fed"; c.lineWidth=1*px; c.setLineDash([4*px,3*px]); c.strokeRect(x,y,w,h); c.setLineDash([]); }
   if(guides){ c.strokeStyle="#e0218a"; c.lineWidth=1*px;
     for(const x of guides.x){ c.setLineDash(x===W/2&&guides.x.length>1?[5*px,4*px]:[]); c.beginPath(); c.moveTo(x,0); c.lineTo(x,H); c.stroke(); }
     c.setLineDash([]); for(const y of guides.y){ c.beginPath(); c.moveTo(0,y); c.lineTo(W,y); c.stroke(); } }
@@ -1129,11 +1188,13 @@ function positionEditor(){
   const b=editing.base, size=(tx?tx.size:(baseOf(it.runs||[b]).size||b.size));
   const lh=(it.lh||size*1.2)*s, align=tx?tx.align:it.align||"center", w=(it.w||780)*s;
   d.style.fontFamily = b.fam==="head" ? `"${HEAD}", Impact, sans-serif` : `"${BODY}", Arial, sans-serif`;
-  d.style.fontSize=(size*s)+"px"; d.style.lineHeight=lh+"px"; d.style.textAlign=align; d.style.color=b.color;
+  d.style.fontSize=(size*s)+"px"; d.style.lineHeight=lh+"px"; d.style.textAlign=align; d.style.color=b.color; d.style.whiteSpace=tx?"pre-wrap":"pre";
   const cx=(it.cx??W/2)*s; d.style.width=w+"px";
   d.style.left=ox+(align==="left"?cx:align==="right"?cx-w:cx-w/2)+"px";
   d.style.top=oy+((it.base??600)*s - size*s*0.92 - (lh-size*s*1.2)/2)+"px";
   // keep the toolbar off the text being edited: above it when there is room, otherwise below it
+  const rk=/^box\d$/.test(editing.el)?"box":editing.el, rr=rotOf(rk), rb=rr&&curBoxes()[rk];
+  if(rb){ d.style.transformOrigin=`${ox+(rb.x+rb.w/2)*s-parseFloat(d.style.left)}px ${oy+(rb.y+rb.h/2)*s-parseFloat(d.style.top)}px`; d.style.transform=`rotate(${rr}deg)`; } else d.style.transform="";
   const tb=$("#tbar"), et=parseFloat(d.style.top), th=tb.offsetHeight, gap=10;
   tb.style.top=(et-th-gap>=4 ? et-th-gap : Math.min(et+d.offsetHeight+gap, $("#fit").clientHeight-th-4))+"px";
 }
@@ -1216,7 +1277,8 @@ function renderTo(cv, list, s){
   c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,cv.width,cv.height); c.setTransform(s,0,0,s,0,0);
   c.imageSmoothingEnabled=true; c.imageSmoothingQuality="high";
   for(const it of list){
-    if(it.ghost) continue;   // selectable in manual edit, but not drawn
+    if(it.ghost) continue;   // removed in manual edit
+    if(it.rot){ c.save(); c.translate(...it.rc); c.rotate(it.rot*Math.PI/180); c.translate(-it.rc[0],-it.rc[1]); }
     if(it.t==="img"){ if(it.shadow){ c.save(); c.shadowColor="rgba(0,0,0,.45)"; c.shadowBlur=4*s; c.shadowOffsetX=-2*s; c.shadowOffsetY=2*s; }
       it.contain ? drawContain(c,it.img,it.x,it.y,it.w,it.h) : c.drawImage(it.img,it.x,it.y,it.w,it.h); if(it.shadow) c.restore(); }
     else if(it.t==="rect"){ c.fillStyle=it.color; c.fillRect(it.x,it.y,it.w,it.h); }
@@ -1225,6 +1287,7 @@ function renderTo(cv, list, s){
     else if(it.t==="qr") drawQR(c,it);
     else if(it.t==="ph") drawPlaceholder(c,it);
     else if(it.t==="text") drawText(c,it);
+    if(it.rot) c.restore();
   }
 }
 
@@ -1437,7 +1500,7 @@ async function makePptx(){
   for(const it of groups){
     if(it.ghost) continue;
     if(it.t==="img"&&it.shadow){ const pad=8,k=4,c=document.createElement("canvas"); c.width=Math.round((it.w+pad*2)*k); c.height=Math.round((it.h+pad*2)*k); renderTo(c,[{...it,x:pad,y:pad}],k); s.addImage({data:c.toDataURL("image/png"),x:IN(it.x-pad),y:IN(it.y-pad),w:IN(it.w+pad*2),h:IN(it.h+pad*2),altText:it.name||""}); }
-    else if(it.t==="img"){ let {x,y,w,h}=it; if(it.contain){ const r=Math.min(w/it.img.width,h/it.img.height), dw=it.img.width*r, dh=it.img.height*r; x+=(w-dw)/2; y+=(h-dh)/2; w=dw; h=dh; } s.addImage({data:imgData(it.img),x:IN(x),y:IN(y),w:IN(w),h:IN(h),altText:it.name||""}); }
+    else if(it.t==="img"){ let {x,y,w,h}=it; if(it.contain){ const r=Math.min(w/it.img.width,h/it.img.height), dw=it.img.width*r, dh=it.img.height*r; x+=(w-dw)/2; y+=(h-dh)/2; w=dw; h=dh; } s.addImage({data:imgData(it.img),x:IN(x),y:IN(y),w:IN(w),h:IN(h),rotate:it.rot||0,altText:it.name||""}); }
     else if(it.t==="rect") s.addShape(p.ShapeType.rect,{x:IN(it.x),y:IN(it.y),w:IN(it.w),h:IN(it.h),fill:{color:hex(it.color)},line:{type:"none"}});
     else if(it.t==="line") s.addShape(p.ShapeType.line,{x:IN(it.x1),y:IN(it.y),w:IN(it.x2-it.x1),h:0,line:{color:hex(it.color),width:PT(it.w)}});
     else if(it.t==="box"){ const pad=12,k=2,c=document.createElement("canvas"); c.width=Math.round((it.w+pad*2)*k); c.height=Math.round((it.h+pad*2)*k); const x=c.getContext("2d"); x.setTransform(k,0,0,k,0,0); drawBox(x,{...it,x:pad,y:pad},k); s.addImage({data:c.toDataURL("image/png"),x:IN(it.x-pad),y:IN(it.y-pad),w:IN(it.w+pad*2),h:IN(it.h+pad*2),altText:"Theme night box"}); }
@@ -1455,7 +1518,7 @@ async function makePptx(){
       }));
       const w=f.w+24, x=f.align==="left"?f.cx-4:f.align==="right"?f.cx-w+4:f.cx-w/2;
       s.addText(text,{x:IN(x),y:IN(f.base-m0),w:IN(w),h:IN(last.base-f.base+m0*1.3),margin:0,align:f.align,valign:"top",
-        lineSpacingMultiple: it.lines.length>1 ? Math.round(lh/(m0*1.2)*1000)/1000 : undefined, paraSpaceBefore:0, paraSpaceAfter:0, fit:"none", wrap:false});
+        lineSpacingMultiple: it.lines.length>1 ? Math.round(lh/(m0*1.2)*1000)/1000 : undefined, paraSpaceBefore:0, paraSpaceAfter:0, fit:"none", wrap:false, rotate:f.rot||0});
     }
   }
   return await p.write({outputType:"blob"});
@@ -1515,7 +1578,9 @@ function addRecent(ask=true){ // ask: offer to tick off a checklist task (not wh
 
 /* ------------------------------ group flyer checklist ------------------------------ */
 // Each rep's to-do list of groups that still need a flyer, kept in this browser like Recent flyers.
-const todoAll=()=>store.get("todo",[]), todoMine=()=>todoAll().filter(t=>t.rep===repOf({s:S})), todoSave=l=>store.set("todo",l);
+// the checklist belongs to the rep who set "This is me" in this browser; without one it follows the flyer's rep
+const todoWho=()=>{ const m=myRep(); return m&&m.name.trim() ? m.name.trim() : repOf({s:S}); };
+const todoAll=()=>store.get("todo",[]), todoMine=()=>todoAll().filter(t=>t.rep===todoWho()), todoSave=l=>store.set("todo",l);
 const daysTo=d=>{ const x=parseDate(d); return x?Math.round((x-parseDate(isoDate(new Date())))/864e5):null; };
 // "Upcoming" is about the order deadline (the flyer's default: the Friday about two weeks before the game):
 // within a week, or already passed while the game is still ahead
@@ -1524,7 +1589,7 @@ const isSoon=t=>{ const n=dlDays(t); return n!=null&&n<=7; };
 const mmdd=d=>`${d.getMonth()+1}/${d.getDate()}`;
 const STAGES={todo:{n:1,label:"Not started"}, progress:{n:2,label:"In progress"}, saved:{n:3,label:"Flyer saved, not marked done"}};
 function renderTodo(){
-  const who=repOf({s:S}), mine=todoMine().sort((a,b)=>(a.date||"9999").localeCompare(b.date||"9999")||a.at-b.at);   // dated games first, soonest on top
+  const who=todoWho(), mine=todoMine().sort((a,b)=>(a.date||"9999").localeCompare(b.date||"9999")||a.at-b.at);   // dated games first, soonest on top
   const cnt=s=>mine.filter(t=>(t.status||"todo")===s).length, ns=cnt("todo"), ip=cnt("progress"), sv=cnt("saved"), due=mine.filter(isSoon).length;
   $("#todosum").innerHTML = mine.length ? [ns&&`${ns} not started`, ip&&`${ip} in progress`, sv&&`${sv} saved`, due&&`<span class="soon">${due} deadline${due===1?"":"s"} soon</span>`].filter(Boolean).join(" · ") : "nothing to do";
   $("#todowho").textContent = who==="No rep" ? "Checklist (pick a rep under Sales rep)" : `${who}’s checklist`;
@@ -1614,9 +1679,13 @@ function buildFmt(){
       <button class="sw" type="button" data-col="${p}:${RED}" style="background:${RED}" title="Red" aria-label="Red"></button>
       <button class="sw" type="button" data-col="${p}:#000000" style="background:#000" title="Black" aria-label="Black"></button>`; });
 }
+// the game list shows upcoming games only, plus this flyer's game if it has already been played
+function fillGames(){
+  const g=$("#game"), today=isoDate(new Date()), sig=today+"|"+S.game; if(g.dataset.sig===sig) return; g.dataset.sig=sig;
+  g.innerHTML = SCHEDULE.map((x,i)=>{ if(x[0]<today&&i!==S.game) return ""; const d=parseDate(x[0]); return `<option value="${i}">${DAY3[d.getDay()]} ${MON3[d.getMonth()]} ${d.getDate()} · ${x[1]} · vs ${esc(x[2])}${x[0]<today?" (played)":""}</option>`; }).join("");
+}
 function fillMenus(){
-  const g=$("#game"), today=isoDate(new Date());
-  g.innerHTML = SCHEDULE.map((x,i)=>{ const d=parseDate(x[0]); return `<option value="${i}">${DAY3[d.getDay()]} ${MON3[d.getMonth()]} ${d.getDate()} · ${x[1]} · vs ${esc(x[2])}${x[0]<today?" (played)":""}</option>`; }).join("");
+  const today=isoDate(new Date()); fillGames();
   const t=[]; for(let h=9;h<=21;h++) for(const m of [0,30]){ const hh=h%12||12, ap=h<12?"AM":"PM"; t.push(m?`${hh}:30${ap}`:(h===12?"NOON":`${hh}${ap}`)); }
   $("#f-dltime").innerHTML=t.map(x=>`<option>${x}</option>`).join("");
   $("#t-game").innerHTML=`<option value="">No game yet</option>`+SCHEDULE.filter(x=>x[0]>=today).map(x=>{ const d=parseDate(x[0]); return `<option value="${x[0]}">${DAY3[d.getDay()]} ${MON3[d.getMonth()]} ${d.getDate()} · vs ${esc(x[2])}</option>`; }).join("");
@@ -1629,16 +1698,21 @@ function syncUI(){
   $$("[data-tg]").forEach(b=>b.setAttribute("aria-pressed",!!getPath(S,b.dataset.tg)));
   $$("[data-al]").forEach(b=>{ const [p,a]=b.dataset.al.split(":"); b.setAttribute("aria-pressed",getPath(S,p+".align")===a); });
   $$("[data-col]").forEach(b=>{ const [p,c]=b.dataset.col.split(":"); b.setAttribute("aria-pressed",String(getPath(S,p+".color")).toUpperCase()===c.toUpperCase()); });
-  $("#game").value = S.game>=0 ? String(S.game) : "";
+  fillGames(); $("#game").value = S.game>=0 ? String(S.game) : "";
   $("#rep").value = allReps().some(r=>r.key===S.rep.key) ? S.rep.key : "custom";
   $("#repdel").hidden = !String(S.rep.key).startsWith("loc:");
+  const custom=S.rep.key==="custom", open=custom||repEditOpen;   // a rep picked from the list needs no typing
+  $("#repfields").hidden=!open; $("#repedit").hidden=open;
+  $("#repline").hidden=open; $("#repline").textContent=[S.rep.email,S.rep.phone].filter(Boolean).join(" · ");
+  const me=myRep(); $("#repme").checked = !!me && me.name.trim().toLowerCase()===String(S.rep.name||"").trim().toLowerCase();
   markSteps();
 }
+let repEditOpen=false;
 const markSteps=()=>$$(".rail details.step").forEach((d,i)=>{ const done=S.done.includes(i);
   d.classList.toggle("done",done); d.classList.toggle("part",!done&&STEP_PARTS[i].some(p=>S.touched.includes(p))); });
 function applyGame(i){ const g=SCHEDULE[i]; S.game=i; S.date=g[0]; S.time=g[1]; S.opp=g[2]; if(!S.dl.manual) S.dl.date=defaultDeadline(S.date); }
 // a different flyer: nothing to undo
-function loadState(s){ closeEditor(false); S=merge(defaults(), JSON.parse(JSON.stringify(s))); sel=null; hist.length=0; $("#undo").disabled=true; syncUI(); loadExtraImgs(); editUI(); renderRecent(); resolveOpp().then(schedule); schedule(); }
+function loadState(s){ closeEditor(false); S=merge(defaults(), JSON.parse(JSON.stringify(s))); sel=null; multi=[]; hist.length=0; $("#undo").disabled=true; syncUI(); loadExtraImgs(); editUI(); renderRecent(); resolveOpp().then(schedule); schedule(); }
 function onField(el){
   const k=el.dataset.k; let v=el.type==="checkbox"?el.checked:el.value;
   if(el.type==="number"){ v=+v; if(!v) return; v=Math.max(8,Math.min(30,v)); }
@@ -1676,7 +1750,7 @@ function wire(){
   });
   $("#todobtn").addEventListener("click",()=>{ const o=$("#todopanel").classList.toggle("open"); $("#todobtn").setAttribute("aria-expanded",o); if(o){ closeMenu(); $("#t-group").focus(); } });
   $("#todoadd").addEventListener("submit",e=>{ e.preventDefault(); const name=$("#t-group").value.trim(); if(!name){ $("#t-group").focus(); return; }
-    const l=todoAll(); l.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5), rep:repOf({s:S}), group:name, date:$("#t-game").value, price:$("#t-price").value.trim(), link:$("#t-link").value.trim(), status:"todo", at:Date.now()});
+    const l=todoAll(); l.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5), rep:todoWho(), group:name, date:$("#t-game").value, price:$("#t-price").value.trim(), link:$("#t-link").value.trim(), status:"todo", at:Date.now()});
     if(!todoSave(l)) toast("Couldn’t save the checklist: browser storage is off.");
     else toast(`${name} added to your checklist.`);
     e.target.reset(); renderTodo(); $("#t-group").focus(); });
@@ -1689,7 +1763,13 @@ function wire(){
   $(".rail").addEventListener("keydown",e=>{ const d=e.target.closest("details.step");
     if(e.key==="Enter" && d && d.querySelector("[data-next]") && e.target.matches("input[type=text],input[type=url],input[type=email],input[type=tel]")){ e.preventDefault(); nextStep(d); } });
   $("#game").addEventListener("change",e=>{ applyGame(+e.target.value); syncUI(); resolveOpp().then(schedule); schedule(); });
-  $("#rep").addEventListener("change",e=>{ const r=allReps().find(x=>x.key===e.target.value); S.rep.key=e.target.value; if(r) Object.assign(S.rep,{name:r.name,email:r.email,phone:r.phone}); askDel=null; syncUI(); renderRecent(); schedule(); });
+  $("#repedit").addEventListener("click",()=>{ repEditOpen=true; syncUI(); $("#f-rname").focus(); });
+  $("#rep").addEventListener("change",e=>{ repEditOpen=false; const r=allReps().find(x=>x.key===e.target.value); S.rep.key=e.target.value; if(r) Object.assign(S.rep,{name:r.name,email:r.email,phone:r.phone}); askDel=null; syncUI(); renderRecent(); schedule(); });
+  $("#repme").addEventListener("change",e=>{ const n=String(S.rep.name||"").trim();
+    if(e.target.checked){ if(!n){ e.target.checked=false; toast("Pick or type the rep’s name first."); return; }
+      store.set("myrep",{...S.rep}); toast(`${n} is now the default rep in this browser. New flyers start with them, and the checklist is theirs.`,4000); }
+    else { store.del("myrep"); toast("No default rep. New flyers start with the first rep again."); }
+    renderRecent(); });
   $("#repsave").addEventListener("click",()=>{ const n=S.rep.name.trim(); if(!n){ toast("Type the rep’s name first."); return; }
     const l=store.get("reps",[]).filter(r=>r.name.toLowerCase()!==n.toLowerCase()); l.push({name:n,email:S.rep.email.trim(),phone:S.rep.phone.trim()}); store.set("reps",l);
     fillReps(); S.rep.key=allReps().find(r=>r.local&&r.name===n)?.key||"custom"; syncUI(); toast(`${n} will be in the Rep menu on this browser.`); });
@@ -1749,7 +1829,8 @@ function wire(){
       if(k==="v"&&clip){ e.preventDefault(); pasteClip(); return; }
       if(k==="c"&&sel){ e.preventDefault(); if(copySel()) toast(`Copied ${selLabel(sel)}. Paste with ${UNDO_KEY.replace("Z","V")}.`); return; }
       if(k==="x"&&sel){ e.preventDefault(); const what=selLabel(sel); if(copySel()){ $("#selremove").click(); toast(`Cut ${what}. Paste with ${UNDO_KEY.replace("Z","V")}.`); } return; } }
-    if(!sel) return;
+    if(e.key==="Escape"&&multi.length){ multi=[]; editUI(); schedule(); return; }
+    if(!sel&&!multi.length) return;
     const st=e.shiftKey?10:1, m={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,-st],ArrowDown:[0,st]}[e.key];
     if(m){ e.preventDefault(); nudge(...m); }
     else if((e.key==="Delete"||e.key==="Backspace")&&!$("#selremove").hidden){ e.preventDefault(); $("#selremove").click(); } });
@@ -1758,7 +1839,7 @@ function wire(){
     else openEditor(h.el); });
   $("#addtext").addEventListener("click",()=>{ const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
     if(!editMode) setEdit(true);
-    remember(); S.texts.push({id,lines:[[{text:"NEW TEXT",bold:true}]],font:"body",size:32,color:NAVY,align:"center",cx:W/2,base:600});
+    remember(); S.texts.push({id,lines:[[{text:"NEW TEXT",bold:true}]],font:"body",size:32,color:NAVY,align:"center",cx:W/2,base:600,w:400});
     sel="t:"+id; editUI(); render(); openEditor(sel); });
   const tb=$("#tbar");
   tb.addEventListener("mousedown",e=>{ if(!e.target.closest("select,input")) e.preventDefault(); });   // keep the text selection
@@ -1781,8 +1862,12 @@ function wire(){
   document.addEventListener("selectionchange",tbState);
   document.addEventListener("pointerdown",e=>{ if(editing&&!e.target.closest("#inlined,#tbar,#preview")) closeEditor(true); });
   $("#selreset").addEventListener("click",()=>{ if(sel){ remember(); delete S.adj[sel]; delete S.ov[sel]; editUI(); schedule(); } });
-  $("#selremove").addEventListener("click",()=>{ if(!sel) return; remember(); toast(`${selLabel(sel)} removed. Undo (${UNDO_KEY}) brings it back.`,3500);
-    if(REMOVABLE.includes(sel)){ S.adj[sel]={...(S.adj[sel]||{}),hidden:true}; editUI(); schedule(); return; }   // stays selected so "Put this item back" is right there
+  $("#selremove").addEventListener("click",()=>{
+    if(multi.length){ remember(); const n=multi.length;
+      for(const k of multi){ if(REMOVABLE.includes(k)) S.adj[k]={...(S.adj[k]||{}),hidden:true}; else if(k.startsWith("x:")) S.extras=S.extras.filter(x=>"x:"+x.id!==k); else if(k.startsWith("t:")) S.texts=S.texts.filter(t=>"t:"+t.id!==k); }
+      multi=[]; editUI(); schedule(); toast(`${n} items removed. Undo (${UNDO_KEY}) brings them back.`,3500); return; }
+    if(!sel) return; remember(); toast(`${selLabel(sel)} removed. Undo (${UNDO_KEY}) or the Removed list in the card brings it back.`,3500);
+    if(REMOVABLE.includes(sel)){ S.adj[sel]={...(S.adj[sel]||{}),hidden:true}; sel=null; editUI(); schedule(); return; }   // listed under Removed in the card to put back
     const id=sel.slice(2); if(sel.startsWith("x:")) S.extras=S.extras.filter(x=>x.id!==id); else S.texts=S.texts.filter(t=>t.id!==id); sel=null; editUI(); schedule(); });
   $("#undo").addEventListener("click",undo);
   $("#selbg").addEventListener("click",async()=>{ const e=S.extras.find(x=>"x:"+x.id===sel); if(!e) return; remember();
@@ -1791,6 +1876,17 @@ function wire(){
       if(!store.set("img."+key,d)) toast("Done, but this browser can’t remember the image after you leave.");
       extraImgs[key]=await loadImage(d); e.orig=e.img; e.img=key; }
     editUI(); schedule(); });
+  function setRot(v){ if(!sel) return; v=Math.round(((v+180)%360+360)%360-180);   // keep it in -180…180
+    const ex=sel.startsWith("x:")?S.extras.find(x=>"x:"+x.id===sel):null, tx=curText(), o=ex||tx||(S.adj[sel]={dx:0,dy:0,sx:1,sy:1,...(S.adj[sel]||{})});
+    if(v) o.rot=v; else delete o.rot; editUI(); schedule(); }
+  let rotBefore=null;
+  $("#rot").addEventListener("focus",()=>{ rotBefore=snap(); });
+  $("#rot").addEventListener("input",e=>{ if(e.target.value!==""&&isFinite(+e.target.value)) setRot(+e.target.value); });
+  $("#rot").addEventListener("change",()=>{ if(rotBefore&&snap()!==rotBefore) remember(rotBefore); rotBefore=snap(); });
+  $("#rotl").addEventListener("click",()=>{ remember(); setRot(rotOf(sel)-90); });
+  $("#rotr").addEventListener("click",()=>{ remember(); setRot(rotOf(sel)+90); });
+  $("#gonerow").addEventListener("click",e=>{ const k=e.target.closest("[data-putback]")?.dataset.putback; if(!k) return;
+    remember(); const a={...S.adj[k]}; delete a.hidden; if(Object.keys(a).length) S.adj[k]=a; else delete S.adj[k]; sel=k; editUI(); schedule(); toast(`${EL_NAMES[k]} is back.`); });
   $("#contact2").addEventListener("change",e=>{ remember(); S.contact2=e.target.checked; sel=S.contact2?"contact2":null; editUI(); schedule();
     if(S.contact2) toast("Added. Double-click the example name and email at the bottom to type over them.",4000); });
   $("#resetall").addEventListener("click",()=>{ const b=$("#resetall"); if(!b.dataset.armed){ b.dataset.armed=1; b.textContent="Click again to reset"; setTimeout(()=>{ delete b.dataset.armed; b.textContent="Reset all to template"; },3000); return; }
